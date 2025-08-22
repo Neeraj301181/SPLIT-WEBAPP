@@ -1,0 +1,1855 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <base target="_top">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <link rel="stylesheet" href="//code.jquery.com/ui/1.12.1/themes/base/jquery-ui.css">
+  <link rel="stylesheet" href="/resources/demos/style.css">
+  <link href="https://fonts.googleapis.com/css?family=Karla:400,700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.materialdesignicons.com/4.8.95/css/materialdesignicons.min.css">
+  <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css">
+  <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.3.1/css/all.css"
+    integrity="sha384-mzrmE5qonljUremFsqc01SB46JvROS7bZs3IO2EmfFsd15uHvIt+Y8vEf7N7fWAU" crossorigin="anonymous">
+  <link rel="stylesheet" href="//cdn.datatables.net/1.11.3/css/jquery.dataTables.min.css">
+  <?!= include("css") ?>
+</head>
+<style type="text/css">
+  td {
+    padding: 0px;
+  }
+
+  input {
+    touch-action: none;
+    /* for Firefox */
+    /* -moz-appearance: none;
+    /* for Safari, Chrome, Opera */
+    /* -webkit-appearance: none; */
+    */
+  }
+</style>
+
+<body>
+
+  <div id="cmt-modal">
+    <div class="modal fade" id="cmt-modal-div" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel"
+      aria-hidden="true" style="background-color:#b3d6ce;">
+      <div class="modal-dialog" role="document">
+        <div class="modal-content">
+          <div class="modal-header">
+            <button type="button" class="close" data-dismiss="modal" aria-label="Close" onclick="refreshCmtModal();">
+              <span aria-hidden="true">&times;</span>
+            </button>
+          </div>
+          <div class="modal-body">
+            <form id="itemsForm1">
+              <div class="form-group row">
+                <label for="comment_verified"
+                  class="col-sm-5 col-form-label pl-2">&nbsp;<strong>Comment</strong></label>
+                <div class="col-sm-7">
+                  <textarea class="form-control" id="comment_verified" name="comment_verified"></textarea>
+                </div>
+              </div>
+            </form>
+          </div>
+          <div class="modal-footer">
+            <button type="button" id="closeVerify1" onclick="refreshCmtModal();" class="btn btn-secondary"
+              data-dismiss="modal">Cancel</button>
+            <button type="button" class="btn btn-primary" id="srr-Btn"
+              onclick="setVerifiedCancel(this)">Submit/Reject</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div id="new_loading" class="loading_market hide_element">
+    <div class="d-flex justify-content-center">
+      <div>
+        <div class="spinner-border" style="width: 3rem; height: 3rem;" role="status">
+          <span class="sr-only">Loading...</span>
+        </div>
+        <div>Loading...</div>
+      </div>
+    </div>
+  </div>
+
+    <div id="modal01">
+        <div class="modal fade" id="itmsModal1" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true"  style="background-color:#b3d6ce;">
+            <div class="modal-dialog" role="document">
+              <div class="modal-content">
+                <div class="modal-header">
+                  <h5 class="modal-title" id="exampleModalLabel">OWNED -- <span class="indent_n"></span></h5>
+                  <button type="button" class="close" data-dismiss="modal" aria-label="Close" onclick="refreshOwnerModal();">
+                    <span aria-hidden="true">&times;</span>
+                  </button>
+                </div>
+                <div class="modal-body">
+                    <form id="itemsForm1">
+                        <div class="form-group row">
+                            <label for="vehicle_number_" class="col-sm-5 col-form-label pl-2">&nbsp;<strong>VEHICLE NUMBER</strong></label>
+                            <div class="col-sm-7">
+                                <input type="text" class="form-control" id="vehicle_number_" name="vehicle_number_" required/>
+                            </div>
+                        </div>
+                        <div class="form-group row">
+                            <label for="aa_da" class="col-sm-5 col-form-label pl-2">&nbsp;<strong>ADVANCE AMOUNT / DRIVER AMOUNT</strong><span style="color: red;">*</span></label>
+                            <div class="col-sm-7">
+                                <input type="number" min="0" class="form-control" id="aa_da" name="aa_da" required/>
+                            </div>
+                        </div>
+
+                    </form>
+                </div>
+                <div class="modal-footer">
+                  <button type="button" id="closeModl1" onclick="refreshOwnerModal();" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                  <button type="button" class="btn btn-primary" onclick="setDataIntoResponse()">Submit</button>
+                </div>
+              </div>
+            </div>
+          </div>
+  </div>
+
+  <div id="market_modal_conten">
+
+    <div class="modal fade" id="marketModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel"
+      aria-hidden="true" style="background-color:#b3d6ce;">
+      <div class="modal-dialog" role="document">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title" id="exampleModalLabel">Market Load<span class="indent_n"></span></h5>
+            <button type="button" class="close" data-dismiss="modal" aria-label="Close"
+              onclick="refreshMarketEmptyMoveModal();">
+              <span aria-hidden="true">&times;</span>
+            </button>
+          </div>
+          <div class="modal-body">
+            <form id="market_load_Form">
+              <!-- <div class="form-group row"> -->
+              <!-- <label for="market_vehicle_number" class="col-sm-5 col-form-label pl-2">&nbsp;<strong>VEHICLE
+                    NUMBER</strong></label>
+                <div class="col-sm-7">
+                  <input type="text" class="form-control market_modal_form_fields" id="market_vehicle_number"
+                    name="Vehicle Number" required />
+                </div> -->
+
+              <div class="form-group row">
+                <label for="market_vehicle_number" class="col-sm-5 col-form-label pl-2">&nbsp;<strong>VEHICLE
+                    NUMBER</strong><span style="color: red;">*</span></label>
+                <div class="col-sm-7">
+                  <label for="market_vehicle_number" class="sr-only">Select Name</label>
+                  <input type="text" autocomplete="off" name="Vehicle Number" id="market_vehicle_number"
+                    class="form-control valid market_modal_form_fields" placeholder="Name"
+                    list="market_vehicle_number_list">
+                  <datalist id="market_vehicle_number_list">
+                  </datalist>
+                </div>
+              </div>
+              <!-- </div> -->
+              <div class="form-group row">
+                <label for="market_broker_name" class="col-sm-5 col-form-label pl-2">&nbsp;<strong>BROKER
+                    NAME</strong><span style="color: red;">*</span></label>
+                <div class="col-sm-7">
+                  <input type="text" min="0" class="form-control  market_modal_form_fields" id="market_broker_name"
+                    name="Broker Name" required />
+                </div>
+              </div>
+              <div class="form-group row">
+                <label for="market_source" class="col-sm-5 col-form-label pl-2">&nbsp;<strong>SOURCE</strong><span
+                    style="color: red;">*</span></label>
+                <div class="col-sm-7">
+                  <input type="text" min="0" class="form-control market_modal_form_fields" id="market_source"
+                    name="Source" required />
+                </div>
+              </div>
+              <!-- <div class="form-group row">
+                <label for="pc" class="col-sm-5 col-form-label pl-2">&nbsp;<strong>SOURCE</strong><span
+                    style="color: red;">*</span></label>
+                <div class="col-sm-7">
+                  <select class="form-control market_modal_form_fields" id="market_source" name="Source">
+                    <option>---SELECT--</option>
+                  </select>
+                </div>
+              </div> -->
+              <div class="form-group row">
+                <label for="market_Destination"
+                  class="col-sm-5 col-form-label pl-2">&nbsp;<strong>DESTINATION</strong><span
+                    style="color: red;">*</span></label>
+                <div class="col-sm-7">
+                  <input type="text" min="0" class="form-control market_modal_form_fields" id="market_Destination"
+                    name="Destination" required />
+                </div>
+              </div>
+              <!-- <div class="form-group row">
+                <label for="market_Destination"
+                  class="col-sm-5 col-form-label pl-2">&nbsp;<strong>DESTINATION</strong><span
+                    style="color: red;">*</span></label>
+                <div class="col-sm-7">
+                  <select class="form-control market_modal_form_fields" id="market_Destination" name="Destination">
+                    <option>---SELECT--</option>
+                  </select>
+                </div>
+              </div> -->
+              <div class="form-group row">
+                <label for="market_Freight" class="col-sm-5 col-form-label pl-2">&nbsp;<strong>FREIGHT</strong><span
+                    style="color: red;">*</span></label>
+                <div class="col-sm-7">
+                  <input type="text" min="0" class="form-control market_modal_form_fields" id="market_Freight"
+                    name="Freight" required />
+                </div>
+              </div>
+              <div class="form-group row">
+                <label for="market_Advance" class="col-sm-5 col-form-label pl-2">&nbsp;<strong>ADVANCE</strong><span
+                    style="color: red;">*</span></label>
+                <div class="col-sm-7">
+                  <input type="text" min="0" class="form-control market_modal_form_fields" id="market_Advance"
+                    name="Advance" required />
+                </div>
+              </div>
+              <div class="form-group row">
+                <label for="market_Deductions" class="col-sm-5 col-form-label pl-2">&nbsp;<strong>DEDUCTIONS</strong><span
+                    style="color: red;">*</span></label>
+                <div class="col-sm-7">
+                  <input type="text" min="0" class="form-control market_modal_form_fields" id="market_Deductions"
+                    name="Deductions" required />
+                </div>
+              </div>
+              <div class="form-group row">
+                <label for="market_Paid_to_Driver" class="col-sm-5 col-form-label pl-2">&nbsp;<strong>PAID TO DRIVER BY
+                    PARTY</strong><span style="color: red;">*</span></label>
+                <div class="col-sm-7">
+                  <input type="text" min="0" class="form-control market_modal_form_fields" id="market_Paid_to_Driver"
+                    name="Paid to Driver By Party" required />
+                </div>
+              </div>
+              <div class="form-group row">
+                <label for="market_Driver_Advance" class="col-sm-5 col-form-label pl-2">&nbsp;<strong>DRIVER ADVANCE
+                    FROM
+                    OFFICE</strong><span style="color: red;">*</span></label>
+                <div class="col-sm-7">
+                  <input type="text" min="0" class="form-control market_modal_form_fields" id="market_Driver_Advance"
+                    name="Driver Advance" required />
+                </div>
+              </div>
+              <div class="form-group row">
+                <label for="market_Loading_Date" class="col-sm-5 col-form-label pl-2">&nbsp;<strong>LOADING
+                    DATE</strong><span style="color: red;">*</span></label>
+                <div class="col-sm-7">
+                  <input type="date" min="0" class="form-control market_modal_form_fields" id="market_Loading_Date"
+                    name="Loading Date" required />
+                </div>
+              </div>
+            </form>
+          </div>
+          <div class="modal-footer">
+            <button type="button" id="closeModl1" onclick="refreshMarketEmptyMoveModal()" class="btn btn-secondary"
+              data-dismiss="modal">Close</button>
+            <button type="button" class="btn btn-primary" id="submit_market_load">Submit</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div id="empty_modal_conten">
+    <div class="modal fade" id="empty_movement_modal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel"
+      aria-hidden="true" style="background-color:#b3d6ce;">
+      <div class="modal-dialog" role="document">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title" id="exampleModalLabel">Empty Movement<span class="indent_n"></span></h5>
+            <button type="button" class="close" data-dismiss="modal" aria-label="Close"
+              onclick="refreshMarketEmptyMoveModal();">
+              <span aria-hidden="true">&times;</span>
+            </button>
+          </div>
+          <div class="modal-body">
+            <form id="empty_movement_Form">
+              <!-- <div class="form-group row">
+                <label for="emplt_mov_vehicle_number" class="col-sm-5 col-form-label pl-2">&nbsp;<strong>VEHICLE
+                    NUMBER</strong></label>
+                <div class="col-sm-7">
+                  <input type="text" class="form-control emplt_mov_modal_form_fields" id="emplt_mov_vehicle_number"
+                    name="Vehicle Number" required />
+                </div>
+              </div> -->
+              <div class="form-group row">
+                <label for="emplt_mov_vehicle_number" class="col-sm-5 col-form-label pl-2">&nbsp;<strong>VEHICLE
+                    NUMBER</strong><span style="color: red;">*</span></label>
+                <div class="col-sm-7">
+                  <label for="emplt_mov_vehicle_number" class="sr-only">Select Name</label>
+                  <input type="text" autocomplete="off" name="Vehicle Number" id="emplt_mov_vehicle_number"
+                    class="form-control valid emplt_mov_modal_form_fields" placeholder="Name"
+                    list="emplt_mov_vehicle_list">
+                  <datalist id="emplt_mov_vehicle_list">
+                  </datalist>
+                </div>
+              </div>
+              <div class="form-group row">
+                <label for="emplt_mov_source" class="col-sm-5 col-form-label pl-2">&nbsp;<strong>SOURCE</strong><span
+                    style="color: red;">*</span></label>
+                <div class="col-sm-7">
+                  <input type="text" min="0" class="form-control emplt_mov_modal_form_fields" id="emplt_mov_source"
+                    name="Source" required />
+                </div>
+              </div>
+              <!-- <div class="form-group row">
+                <label for="emplt_mov_source" class="col-sm-5 col-form-label pl-2">&nbsp;<strong>SOURCE</strong><span
+                    style="color: red;">*</span></label>
+                <div class="col-sm-7">
+                  <select class="form-control emplt_mov_modal_form_fields" id="emplt_mov_source" name="Source">
+                    <option>---SELECT--</option>
+                  </select>
+                </div>
+              </div> -->
+              <div class="form-group row">
+                <label for="emplt_mov_Destination"
+                  class="col-sm-5 col-form-label pl-2">&nbsp;<strong>DESTINATION</strong><span
+                    style="color: red;">*</span></label>
+                <div class="col-sm-7">
+                  <input type="text" min="0" class="form-control emplt_mov_modal_form_fields" id="emplt_mov_Destination"
+                    name="Destination" required />
+                </div>
+              </div>
+              <!-- <div class="form-group row">
+                <label for="emplt_mov_Destination"
+                  class="col-sm-5 col-form-label pl-2">&nbsp;<strong>DESTINATION</strong><span
+                    style="color: red;">*</span></label>
+                <div class="col-sm-7">
+                  <select class="form-control emplt_mov_modal_form_fields" id="emplt_mov_Destination" name="Destination">
+                    <option>---SELECT--</option>
+                  </select>
+                </div>
+              </div> -->
+              <div class="form-group row">
+                <label for="emplt_mov_aa_da" class="col-sm-5 col-form-label pl-2">&nbsp;<strong>DRIVER ADVANCE
+
+                  </strong><span style="color: red;">*</span></label>
+                <div class="col-sm-7">
+                  <input type="text" min="0" class="form-control emplt_mov_modal_form_fields" id="emplt_mov_aa_da"
+                    name="Driver Advance" required />
+                </div>
+              </div>
+              <div class="form-group row">
+                <label for="emplt_mov_Movement_Date" class="col-sm-5 col-form-label pl-2">&nbsp;<strong>MOVEMENT
+                    DATE</strong><span style="color: red;">*</span></label>
+                <div class="col-sm-7">
+                  <input type="date" min="0" class="form-control emplt_mov_modal_form_fields"
+                    id="emplt_mov_Movement_Date" name="Movement Date" required />
+                </div>
+              </div>
+            </form>
+          </div>
+          <div class="modal-footer">
+            <button type="button" id="closeModl1" onclick="refreshMarketEmptyMoveModal()" class="btn btn-secondary"
+              data-dismiss="modal">Close</button>
+            <button type="button" class="btn btn-primary" id="submit_empty_move">Submit</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div id="modal02">
+    <div class="modal fade" id="itmsModal2" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel"
+      aria-hidden="true" style="background-color:#b3d6ce;">
+      <div class="modal-dialog" role="document">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title" id="exampleModalLabel">MARKET -- <span class="indent_n"></span></h5>
+            <button type="button" onclick="refreshMarketModal()" class="close" data-dismiss="modal" aria-label="Close">
+              <span aria-hidden="true">&times;</span>
+            </button>
+          </div>
+          <div class="modal-body">
+            <form id="itemsForm2">
+              <div class="form-group row">
+                <label for="bn" class="col-sm-5 col-form-label pl-2">&nbsp;<strong>BROKER NAME</strong><span
+                    style="color: red;">*</span></label>
+                <div class="col-sm-7">
+                  <input type="text" min="0" class="form-control" id="bn" name="bn" />
+                </div>
+              </div>
+              <div class="form-group row">
+                <label for="rate" class="col-sm-5 col-form-label pl-2">&nbsp;<strong>RATE</strong><span
+                    style="color: red;">*</span></label>
+                <div class="col-sm-7">
+                  <input type="text" class="form-control" id="rate" name="rate" />
+                </div>
+              </div>
+              <div class="form-group row">
+                <label for="vehicle_no" class="col-sm-5 col-form-label pl-2">&nbsp;<strong>VEHICLE NUMBER</strong><span
+                    style="color: red;">*</span></label>
+                <div class="col-sm-7">
+                  <input type="text" class="form-control" id="vehicle_no" name="vehicle_no" />
+                </div>
+              </div>
+              <div class="form-group row">
+                <label for="advance_amt" class="col-sm-5 col-form-label pl-2">&nbsp;<strong>ADVANCE AMOUNT / DRIVER
+                    AMOUNT</strong><span style="color: red;">*</span></label>
+                <div class="col-sm-7">
+                  <input type="text" class="form-control" id="advance_amt" name="advance_amt" />
+                </div>
+              </div>
+            </form>
+          </div>
+          <div class="modal-footer">
+            <button type="button" id="closeModl2" class="btn btn-secondary" onclick="refreshMarketModal()"
+              data-dismiss="modal">Close</button>
+            <button type="button" class="btn btn-primary" onclick="setDataIntoResponse2()">Submit</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div id="modal03">
+    <div class="modal fade" id="itmsModal3" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel"
+      aria-hidden="true" style="background-color:#b3d6ce;">
+      <div class="modal-dialog" role="document">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title" id="exampleModalLabel">NON PLACEMENT -- <span class="indent_n"></span></h5>
+            <button type="button" onclick="refreshNonPModal()" class="close" data-dismiss="modal" aria-label="Close">
+              <span aria-hidden="true">&times;</span>
+            </button>
+          </div>
+          <div class="modal-body">
+            <center>
+              <form id="itemsForm3">
+                <div class="form-group row">
+                  <label for="cancelledbyclient" class="col-sm-5 col-form-label pl-2">CANCELLED BY CLIENT</label>
+                  <div class="col-sm-7">
+                    <input type="radio" id="cancelledbyclient" name="omn" value="CANCELLED BY CLIENT" />
+                  </div>
+                </div>
+                <div class="form-group row">
+                  <label for="wrong_indent" class="col-sm-5 col-form-label pl-2">WRONG INDENT PUNCEHD</label>
+                  <div class="col-sm-7">
+                    <input type="radio" id="wrong_indent" name="omn" value="WRONG INDENT PUNCEHD" />
+                  </div>
+                </div>
+                <div class="form-group row">
+                  <label for="detention_issue" class="col-sm-5 col-form-label pl-2">DETENTION ISSUE</label>
+                  <div class="col-sm-7">
+                    <input type="radio" id="detention_issue" name="omn" value="DETENTION ISSUE" />
+                  </div>
+                </div>
+                <div class="form-group row">
+                  <label for="availability_issue" class="col-sm-5 col-form-label pl-2">AVAILABILITY ISSUE</label>
+                  <div class="col-sm-7">
+                    <input type="radio" id="availability_issue" name="omn" value="AVAILABILITY ISSUE" />
+                  </div>
+                </div>
+              </form>
+            </center>
+          </div>
+          <div class="modal-footer">
+            <button type="button" id="closeModl3" class="btn btn-secondary" onclick="refreshNonPModal()"
+              data-dismiss="modal">Close</button>
+            <button type="button" class="btn btn-primary" onclick="setDataIntoResponse3()">Submit</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <section id="login-page">
+    <main class="d-flex align-items-center min-vh-100 py-3 py-md-0">
+      <div class="container">
+        <div class="card login-card">
+          <div class="row no-gutters">
+            <div class="col-md-5">
+              <img src="https://blog.bonus.ly/hubfs/state-of-employee-engagement-2019-featured-1.png" alt="login"
+                class="login-card-img">
+            </div>
+            <div class="col-md-7">
+              <div class="card-body">
+                <h1 class="card-title" id="company_name">
+                  loading...
+                </h1>
+                <br><br>
+                <form>
+                  <div class="form-group">
+                    <label for="name" class="sr-only">Select Name</label>
+                    <input type="text" autocomplete="off" name="name" id="name" class="form-control valid"
+                      placeholder="Name" list="names">
+                    <datalist id="names">
+                    </datalist>
+                  </div>
+                  <div class="form-group mb-4">
+                    <label for="password" class="sr-only">Password</label>
+                    <input type="password" name="password" id="password" class="form-control valid"
+                      placeholder="***********">
+                  </div>
+                  <button name="login" id="login" class="btn btn-block login-btn mb-4">Login</button>
+                </form>
+              </div>
+              <p style="font-size: 11px;">Developed by SCC Delhi</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </main>
+  </section>
+
+  <section id="home_page" style="display:none;">
+    <div class="container">
+      <center><a taget="_top" onclick="$('#login-page').hide();$('#home_page').show();"
+          style="color:#2bad32;float:left;"><i
+            class="btn btn-outline-dar waves-effect waves-light fas fa-arrow-left fa-fw fa-2x back2-btn"
+            style="color:#2bad32;float:left;"></i>HOME PAGE</a>
+        &nbsp;<strong><span class="welcom_"></span></strong>&nbsp;
+        <a taget="_top" style="color:#2bad32;float:right;" onclick="logoutWeb();"> LOGOUT<i
+            class="btn btn-outline-dar waves-effect waves-light fas fa-arrow-right fa-fw fa-2x"
+            style="color:#2bad32;float:right;"></i></a>
+      </center>
+    </div>
+    <div id="button-group" style="min-width:240px;max-width:240px;margin-top:15px;">
+      <div id="fleet_movement" style="display:none;">
+        <button style="min-width:200px;max-width:200px;" type="button" class="btn btn-info mt-3"
+          fn="fleet_movement_dashboard" onclick="loadData(this);">Fleet Movement</button><br>
+      </div>
+      <div id="indent_gen" style="display:none;">
+        <button style="min-width:200px;max-width:200px;" type="button" class="btn btn-success mt-3 indent_table_content"
+          fn="indent_generator" onclick="loadData(this);">INDENT GENERATOR</button><br>
+      </div>
+      <div id="purchase_fms" style="display:none;">
+        <button style="min-width:200px;max-width:200px;" type="button" class="btn btn-primary mt-3"
+          fn="purchase_fms_dashboard" onclick="loadData(this);">PURCHASE FMS</button><br>
+      </div>
+      <div id="vehicle_reporting" style="display:none;">
+        <button style="min-width:200px;max-width:200px;" type="button" class="btn btn-info mt-3"
+          fn="vehicle_reporting_form" onclick="loadData(this);">VEHICLE REPORTING</button><br>
+      </div>
+      <div id="release_lr" style="display:none;">
+        <button style="min-width:200px;max-width:200px;" type="button" class="btn btn-secondary mt-3"
+          fn="release_lr_form" onclick="loadData(this);">RELEASE LR</button>
+        <br>
+      </div>
+      <div id="uploading_reporting" style="display:none;">
+        <button style="min-width:200px;max-width:200px;" type="button" class="btn btn-warning mt-3"
+          fn="uploading_reporting_form" onclick="loadData(this);">UNLOADING REPORTING</button>
+        <br>
+      </div>
+      <div id="uploading_done" style="display:none;">
+        <button style="min-width:200px;max-width:200px;" type="button" class="btn btn-danger mt-3"
+          fn="uploading_done_form" onclick="loadData(this);">UNLOADING DONE</button>
+        <br>
+      </div>
+      <div id="documents_" style="display:none;">
+        <button style="min-width:200px;max-width:200px;" type="button" class="btn btn-primary mt-3" fn="document_form"
+          onclick="loadData(this);">DOCUMENTS</button>
+        <br>
+      </div>
+      <div id="verified_" style="display:none;">
+        <button style="min-width:200px;max-width:200px;" type="button" class="btn btn-success mt-3" fn="verified_form"
+          onclick="loadData(this);">VERFIED</button>
+        <br>
+      </div>
+      <div id="acknwledgement_" style="display:none;">
+        <button style="min-width:200px;max-width:200px;" type="button" class="btn btn-primary mt-3"
+          fn="acknwledgement_form" onclick="loadData(this);">Acknowledgement</button>
+        <br><br>
+      </div>
+
+      <!-- <div id="acknwledgement_verified_" style="display:none;">
+      <button style="min-width:200px;max-width:200px;" type="button" class="btn btn-secondary mt-3" fn="acknwledgement_verified_form" onclick="loadData(this);">Ack Verified</button>
+      <br><br>
+      </div> -->
+    </div><br>
+  </section>
+
+  <section id="acknwledgement_verified_form" style="display:none;">
+    <div class="container">
+      <center><a taget="_top" onclick="$('#acknwledgement_verified_form').hide();$('#home_page').show();"
+          style="color:#2bad32;float:left;"><i
+            class="btn btn-outline-dar waves-effect waves-light fas fa-arrow-left fa-fw fa-2x back2-btn"
+            style="color:#2bad32;float:left;"></i>Back</a>
+        &nbsp;<strong><span class="welcom_"></span></strong>&nbsp;
+        <a taget="_top" style="color:#2bad32;float:right;" onclick="logoutWeb();"> LOGOUT<i
+            class="btn btn-outline-dar waves-effect waves-light fas fa-arrow-right fa-fw fa-2x logout_btn"
+            style="color:#2bad32;float:right;"></i></a>
+      </center>
+
+      <center>
+        <h3 style="color:red;">ACKNOWLEDGEMENT VERIFICATION</h3>
+      </center>
+
+      <div style="background-color: white;overflow-x: scroll;padding:30px;" class="mt-5">
+        <table id="acknwledgement_verified_table" style="width:100%;margin-left: auto;margin-right: auto;font-size:75%"
+          class="table table-search">
+          <thead>
+            <tr>
+              <th scope="col">LR NO</th>
+              <th scope="col">LR DATE</th>
+              <th scope="col">VEHICLE NO</th>
+              <th scope="col">CLIENT</th>
+              <th scope="col">SOURCE</th>
+              <th scope="col">DESTINATION</th>
+            </tr>
+          </thead>
+          <tbody id="acknwledgement_verified-documents">
+
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <section id="acknwledgement_verified_form_" style="display:none;">
+    <div class="container">
+      <center><a taget="_top" onclick="$('#acknwledgement_verified_form_').hide();$('#acknwledgement_form').show();"
+          style="color:#2bad32;float:left;"><i
+            class="btn btn-outline-dar waves-effect waves-light fas fa-arrow-left fa-fw fa-2x back2-btn"
+            style="color:#2bad32;float:left;"></i>BACK</a>
+        &nbsp;<strong><span class="welcom_"></span></strong>&nbsp;
+        <a taget="_top" style="color:#2bad32;float:right;" onclick="logoutWeb();"> LOGOUT<i
+            class="btn btn-outline-dar waves-effect waves-light fas fa-arrow-right fa-fw fa-2x logout_btn"
+            style="color:#2bad32;float:right;"></i></a>
+      </center>
+    </div>
+    <div class="container mb-3">
+      <div style="background-color: white;overflow-x: auto;padding:5px;" class="mt-5">
+        <table id="acknwledgement_verified_tbl" style="width:100%;margin-left: auto;margin-right: auto;font-size:75%"
+          class="table">
+          <thead>
+            <tr>
+              <th scope="col">LR NO</th>
+              <th scope="col">LR DATE</th>
+              <th scope="col">VEHICLE NO</th>
+              <th scope="col">CLIENT</th>
+              <th scope="col">SOURCE</th>
+              <th scope="col">DESTINATION</th>
+            </tr>
+          </thead>
+          <tbody id="acknwledgement_verified-documents">
+            <tr>
+              <td><span style="color: blue;" id="akv_indno"></span></td>
+              <td><span style="color: blue;" id="akv_lr_date"></span></td>
+              <td><span style="color: blue;" id="akv_vehicle_no_"></span></td>
+              <td><span style="color: blue;" id="akv_client"></span></td>
+              <td><span style="color: blue;" id="akv_source"></span></td>
+              <td><span style="color: blue;" id="akv_destination"></span></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="card" style="width: 28rem;margin:auto;">
+      <div class="card-body">
+        <form>
+          <div class="form-group">
+            Arrival Date / time<span style="color:red;">*</span>
+            <input type="datetime-local" style="float:right;width:218px;" autocomplete="off" name="arrival_date_time"
+              id="arrival_date_time" class="valid" />
+          </div>
+
+          <div class="form-group">
+            Release Date / time<span style="color:red;">*</span>
+            <input type="datetime-local" style="float:right;width:218px;" autocomplete="off" name="release_date_time"
+              id="release_date_time" class="valid" />
+          </div>
+
+          <div class="form-group">
+            Case Shortage<span style="color:red;">*</span>
+            <input type="number" style="float:right;width:218px;" min="0" autocomplete="off" name="case_shortage"
+              id="case_shortage" class="valid" />
+          </div>
+
+          <div class="form-group">
+            Unit Shortage<span style="color:red;">*</span>
+            <input type="number" style="float:right;width:218px;" min="0" autocomplete="off" name="unit_shortage"
+              id="unit_shortage" class="valid" />
+          </div>
+
+          <div class="form-group">
+            Case Excess<span style="color:red;">*</span>
+            <input type="number" style="float:right;width:218px;" min="0" autocomplete="off" name="case_excess"
+              id="case_excess" class="valid" />
+          </div>
+
+          <div class="form-group">
+            Unit Excess<span style="color:red;">*</span>
+            <input type="number" style="float:right;width:218px;" min="0" autocomplete="off" name="unit_excess"
+              id="unit_excess" class="valid" />
+          </div>
+
+          <div class="form-group">
+            Case Damage<span style="color:red;">*</span>
+            <input type="number" style="float:right;width:218px;" min="0" autocomplete="off" name="case_damage"
+              id="case_damage" class="valid" />
+          </div>
+
+          <div class="form-group">
+            Unit Damage<span style="color:red;">*</span>
+            <input type="number" style="float:right;width:218px;" min="0" autocomplete="off" name="unit_damage"
+              id="unit_damage" class="valid" />
+          </div>
+
+          <div class="form-group">
+            Labour Amount<span style="color:red;">*</span>
+            <input type="number" style="float:right;width:218px;" min="0" autocomplete="off" name="labour_amount"
+              id="labour_amount" class="valid" />
+          </div>
+
+          <div class="form-group">
+            SEAL OK MENTIONED ON ACKNOWLEDGEMENT<span style="color:red;">*</span>
+            <select autocomplete="off" name="somoa" id="somoa" style="width:63px;">
+              <option value=""></option>
+              <option>YES</option>
+              <option>NO</option>
+            </select>
+          </div>
+
+          <!-- <div class="form-group">
+              Front of LR Ack:&nbsp;
+              <a id="folra" target="_blank" style="display:none;">Click here</a>
+            </div>
+
+            <div class="form-group">
+              Back of LR Ack:&nbsp;
+              <a id="bolra" target="_blank" style="display:none;">Click here</a>
+            </div>
+
+            <div class="form-group">
+              Company Ack:&nbsp;
+              <a id="com_ack" target="_blank" style="display:none;">Click here</a>
+            </div> -->
+
+          <div class="form-group">
+            Page 1<span style="color:red;">*</span>
+            <input type="file" autocomplete="off" name="upload_front_of_lr_Ack" id="upload_front_of_lr_Ack"
+              class="form-control valid" />
+          </div>
+
+          <div class="form-group">
+            Page 2
+            <input type="file" autocomplete="off" name="upload_back_of_lr_ack" id="upload_back_of_lr_ack"
+              class="form-control valid" />
+          </div>
+
+          <div class="form-group">
+            Page 3
+            <input type="file" autocomplete="off" name="upload_company_ack" id="upload_company_ack"
+              class="form-control valid" />
+          </div>
+
+          <div class="form-group">
+            Receipt Date<span style="color:red;">*</span>
+            <input type="date" style="float:right;width:218px;" name="rece_date" id="rece_date" class="valid" />
+          </div>
+
+          <button type="button" class="btn btn-danger" style="width:410px;" id="submitVerifyDatabtn"
+            onclick="submitAckVerifyData();">Submit</button><br><br>
+        </form>
+
+      </div>
+    </div>
+  </section>
+
+  <section id="acknwledgement_form" style="display:none;">
+    <div class="container">
+      <center><a taget="_top" onclick="$('#acknwledgement_form').hide();$('#home_page').show();"
+          style="color:#2bad32;float:left;"><i
+            class="btn btn-outline-dar waves-effect waves-light fas fa-arrow-left fa-fw fa-2x back2-btn"
+            style="color:#2bad32;float:left;"></i>Back</a>
+        &nbsp;<strong><span class="welcom_"></span></strong>&nbsp;
+        <a taget="_top" style="color:#2bad32;float:right;" onclick="logoutWeb();"> LOGOUT<i
+            class="btn btn-outline-dar waves-effect waves-light fas fa-arrow-right fa-fw fa-2x logout_btn"
+            style="color:#2bad32;float:right;"></i></a>
+      </center>
+
+      <center>
+        <h3 style="color:red;">Acknowledgement</h3>
+      </center>
+
+      <div style="background-color: white;overflow-x: scroll;padding:30px;" class="mt-5">
+        <table id="acknwledgement_table" style="width:100%;margin-left: auto;margin-right: auto;font-size:75%"
+          class="table table-search">
+          <thead>
+            <tr>
+              <th scope="col">LR NO</th>
+              <th scope="col">LR DATE</th>
+              <th scope="col">VEHICLE NO</th>
+              <th scope="col">CLIENT</th>
+              <th scope="col">SOURCE</th>
+              <th scope="col">DESTINATION</th>
+            </tr>
+          </thead>
+          <tbody id="acknwledgement-documents">
+
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <section id="acknwledgement_form_" style="display:none;">
+    <div class="container">
+      <center><a taget="_top" onclick="$('#acknwledgement_form_').hide();$('#acknwledgement_form').show();"
+          style="color:#2bad32;float:left;"><i
+            class="btn btn-outline-dar waves-effect waves-light fas fa-arrow-left fa-fw fa-2x back2-btn"
+            style="color:#2bad32;float:left;"></i>BACK</a>
+        &nbsp;<strong><span class="welcom_"></span></strong>&nbsp;
+        <a taget="_top" style="color:#2bad32;float:right;" onclick="logoutWeb();"> LOGOUT<i
+            class="btn btn-outline-dar waves-effect waves-light fas fa-arrow-right fa-fw fa-2x logout_btn"
+            style="color:#2bad32;float:right;"></i></a>
+      </center>
+    </div>
+    <center>
+      <p>LR No: <span style="color: blue;" id="ak_indno"></span></p>
+    </center>
+    <div class="card" style="width: 25rem;margin:auto;">
+      <div class="card-body">
+        <form>
+          <div class="form-group">
+            Page 1<span style="color:red;">*</span>
+            <input type="file" autocomplete="off" name="upload_front_of_lr_Ack" id="upload_front_of_lr_Ack"
+              class="form-control valid" />
+          </div>
+
+          <div class="form-group">
+            Page 2
+            <input type="file" autocomplete="off" name="upload_back_of_lr_ack" id="upload_back_of_lr_ack"
+              class="form-control valid" />
+          </div>
+
+          <div class="form-group">
+            Page 3
+            <input type="file" autocomplete="off" name="upload_company_ack" id="upload_company_ack"
+              class="form-control valid" />
+          </div>
+          <button type="button" class="btn btn-danger" id="submitAckDatabtn"
+            onclick="submitAckData();">Submit</button><br><br>
+        </form>
+
+      </div>
+    </div>
+  </section>
+
+  <section id="document_form" style="display:none;">
+    <div class="container">
+      <center><a taget="_top" onclick="$('#document_form').hide();$('#home_page').show();"
+          style="color:#2bad32;float:left;"><i
+            class="btn btn-outline-dar waves-effect waves-light fas fa-arrow-left fa-fw fa-2x back2-btn"
+            style="color:#2bad32;float:left;"></i>Back</a>
+        &nbsp;<strong><span class="welcom_"></span></strong>&nbsp;
+        <a taget="_top" style="color:#2bad32;float:right;" onclick="logoutWeb();"> LOGOUT<i
+            class="btn btn-outline-dar waves-effect waves-light fas fa-arrow-right fa-fw fa-2x logout_btn"
+            style="color:#2bad32;float:right;"></i></a>
+      </center>
+
+      <center>
+        <h3 style="color:red;">Documents</h3>
+      </center>
+
+      <div style="background-color: white;overflow-x: scroll;padding:30px;" class="mt-5">
+        <table id="itemsTable-documents" style="width:100%;margin-left: auto;margin-right: auto;font-size:75%"
+          class="table table-search">
+          <thead>
+            <tr>
+              <th scope="col">LR NUMBER/LR DATE</th>
+              <th scope="col">VEHICLE NO</th>
+              <th scope="col">PENDING DOCS</th>
+            </tr>
+          </thead>
+          <tbody id="itmsBody-documents">
+            <!-- <tr>
+              <td></td>
+              <td>Otto</td>
+              <td>@mdo</td>
+              <td>Mark</td>
+              <td>Otto</td>
+              <td>@mdo</td>
+              <td>Mark</td>
+            </tr> -->
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <section id="document_cases" style="display:none;">
+    <div class="container">
+      <center><a taget="_top" onclick="$('#document_cases').hide();$('#document_form').show();"
+          style="color:#2bad32;float:left;"><i
+            class="btn btn-outline-dar waves-effect waves-light fas fa-arrow-left fa-fw fa-2x back2-btn"
+            style="color:#2bad32;float:left;"></i>BACK</a>
+        &nbsp;<strong><span class="welcom_"></span></strong>&nbsp;
+        <a taget="_top" style="color:#2bad32;float:right;" onclick="logoutWeb();"> LOGOUT<i
+            class="btn btn-outline-dar waves-effect waves-light fas fa-arrow-right fa-fw fa-2x logout_btn"
+            style="color:#2bad32;float:right;"></i></a>
+      </center>
+    </div>
+    <div id="button-group" class="doc_cases">
+      VEHICLE NO <p style="color:green;" id="vehicle_no_"></p>
+    </div>
+  </section>
+
+  <section id="document_pan" style="display:none;">
+    <div class="container">
+      <center><a taget="_top" onclick="$('#document_pan').hide();$('#document_cases').show();"
+          style="color:#2bad32;float:left;"><i
+            class="btn btn-outline-dar waves-effect waves-light fas fa-arrow-left fa-fw fa-2x back2-btn"
+            style="color:#2bad32;float:left;"></i>BACK</a>
+        &nbsp;<strong><span class="welcom_"></span></strong>&nbsp;
+        <a taget="_top" style="color:#2bad32;float:right;" onclick="logoutWeb();"> LOGOUT<i
+            class="btn btn-outline-dar waves-effect waves-light fas fa-arrow-right fa-fw fa-2x logout_btn"
+            style="color:#2bad32;float:right;"></i></a>
+      </center>
+    </div>
+    <div class="card" style="width: 25rem;margin:auto;">
+      <div class="card-body">
+        <form>
+          <div class="form-group">
+            PAN NUMBER<span style="color:red;">*</span>
+            <input type="text" autocomplete="off" onkeyup="$(this).val($(this).val().toUpperCase())" name="pan_no_"
+              id="pan_no_" class="form-control valid" />
+          </div>
+          <button type="button" class="btn btn-success" onclick="checkPanDetails();">Search</button><br><br>
+          <div id="data_div" style="display:none;">
+            <div class="form-group" id="pan_image">
+              PAN IMAGE<span style="color:red;">*</span>
+              <input type="file" autocomplete="off" name="pan_img_" id="pan_img_" class="form-control valid" />
+            </div>
+            <div class="form-group">
+              NAME ON PAN
+              <input type="text" autocomplete="off" name="name_on_pan" id="name_on_pan" class="form-control valid" />
+            </div>
+            <button type="button" class="btn btn-danger" onclick="submitPanData();">Submit</button><br><br>
+          </div>
+        </form>
+
+      </div>
+    </div>
+  </section>
+
+  <section id="document_tds" style="display:none;">
+    <div class="container">
+      <center><a taget="_top" onclick="$('#document_tds').hide();$('#document_cases').show();"
+          style="color:#2bad32;float:left;"><i
+            class="btn btn-outline-dar waves-effect waves-light fas fa-arrow-left fa-fw fa-2x back2-btn"
+            style="color:#2bad32;float:left;"></i>BACK</a>
+        &nbsp;<strong><span class="welcom_"></span></strong>&nbsp;
+        <a taget="_top" style="color:#2bad32;float:right;" onclick="logoutWeb();"> LOGOUT<i
+            class="btn btn-outline-dar waves-effect waves-light fas fa-arrow-right fa-fw fa-2x logout_btn"
+            style="color:#2bad32;float:right;"></i></a>
+      </center>
+    </div>
+    <div class="card" style="width: 25rem;margin:auto;">
+      <div class="card-body">
+        <form>
+          <div class="form-group">
+            TDS
+            <select autocomplete="off" name="TDS" id="TDS" class="form-control valid" onchange="checkTDSOption();">
+              <option>---SELECT---</option>
+              <option>YES</option>
+              <option>NO</option>
+              <select>
+          </div>
+          <div class="form-group" id="tds_form1">
+            TDS FORM
+            <input type="file" autocomplete="off" name="TDS_FORM" id="TDS_FORM" class="form-control valid" />
+            <p style="color:red;" id="tds_form_label"></p>
+          </div>
+        </form>
+        <button type="button" class="btn btn-success" onclick="submitTdsData();">Submit</button><br><br>
+      </div>
+    </div>
+  </section>
+
+  <section id="document_rc" style="display:none;">
+    <div class="container">
+      <center><a taget="_top" onclick="$('#document_rc').hide();$('#document_cases').show();"
+          style="color:#2bad32;float:left;"><i
+            class="btn btn-outline-dar waves-effect waves-light fas fa-arrow-left fa-fw fa-2x back2-btn"
+            style="color:#2bad32;float:left;"></i>BACK</a>
+        &nbsp;<strong><span class="welcom_"></span></strong>&nbsp;
+        <a taget="_top" style="color:#2bad32;float:right;" onclick="logoutWeb();"> LOGOUT<i
+            class="btn btn-outline-dar waves-effect waves-light fas fa-arrow-right fa-fw fa-2x logout_btn"
+            style="color:#2bad32;float:right;"></i></a>
+      </center>
+    </div>
+    <div class="card" style="width: 25rem;margin:auto;">
+      <div class="card-body">
+        <form>
+          <div class="form-group">
+            RC COPY<span style="color:red;">*</span>
+            <input type="file" autocomplete="off" name="RC_COPY" id="RC_COPY" class="form-control valid" />
+          </div>
+          <div class="form-group">
+            ADDRESS
+            <textarea autocomplete="off" name="ADDRESS" id="ADDRESS" class="form-control valid"></textarea>
+          </div>
+        </form>
+        <button type="button" class="btn btn-primary" onclick="submitRCData();">Submit</button><br><br>
+      </div>
+    </div>
+  </section>
+
+  <section id="document_ret_dec" style="display:none;">
+    <div class="container">
+      <center><a taget="_top" onclick="$('#document_ret_dec').hide();$('#document_cases').show();"
+          style="color:#2bad32;float:left;"><i
+            class="btn btn-outline-dar waves-effect waves-light fas fa-arrow-left fa-fw fa-2x back2-btn"
+            style="color:#2bad32;float:left;"></i>BACK</a>
+        &nbsp;<strong><span class="welcom_"></span></strong>&nbsp;
+        <a taget="_top" style="color:#2bad32;float:right;" onclick="logoutWeb();"> LOGOUT<i
+            class="btn btn-outline-dar waves-effect waves-light fas fa-arrow-right fa-fw fa-2x logout_btn"
+            style="color:#2bad32;float:right;"></i></a>
+      </center>
+    </div>
+    <div class="card" style="width: 25rem;margin:auto;">
+      <div class="card-body">
+        <form>
+          <div class="form-group">
+            RET DEC AVAILABLE
+            <select autocomplete="off" name="RET_DEC_AVAI" id="RET_DEC_AVAI" class="form-control valid"
+              onchange="setrestDec();">
+              <option>---SELECT--</option>
+              <option>YES</option>
+              <option>NO</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <div id="tds_" style="display:none;">
+              RET DEC<span style="color:red;">*</span>
+              <input type="file" autocomplete="off" name="rec_dec_img_" id="rec_dec_img_" class="form-control valid" />
+            </div>
+          </div>
+          <div class="form-group">
+            % TDS
+            <input type="text" autocomplete="off" name="tds" id="tds" disabled class="form-control valid" />
+          </div>
+        </form>
+        <button type="button" class="btn btn-secondary" onclick="submitRetDec();">Submit</button><br><br>
+      </div>
+    </div>
+  </section>
+
+  <section id="verified_form" style="display:none;">
+    <div class="container">
+      <center><a taget="_top" onclick="$('#verified_form').hide();$('#home_page').show();"
+          style="color:#2bad32;float:left;"><i
+            class="btn btn-outline-dar waves-effect waves-light fas fa-arrow-left fa-fw fa-2x back2-btn"
+            style="color:#2bad32;float:left;"></i>Back</a>
+        &nbsp;<strong><span class="welcom_"></span></strong>&nbsp;
+        <a taget="_top" style="color:#2bad32;float:right;" onclick="logoutWeb();"> LOGOUT<i
+            class="btn btn-outline-dar waves-effect waves-light fas fa-arrow-right fa-fw fa-2x logout_btn"
+            style="color:#2bad32;float:right;"></i></a>
+      </center>
+
+      <center>
+        <h3 style="color:red;">VERIFIED</h3>
+      </center>
+
+      <div style="background-color: white;overflow-x: scroll;padding:30px;" class="mt-5">
+        <table id="itemsTable-verified" style="width:100%;margin-left: auto;margin-right: auto;font-size:75%"
+          class="table table-search">
+          <thead>
+            <tr>
+              <th scope="col">VEHICLE No.</th>
+              <th scope="col">PAN NUMBER & NAME ON PAN</th>
+              <th scope="col">ADDRESS</th>
+              <th scope="col">TDS(YES/NO)</th>
+            </tr>
+          </thead>
+          <tbody id="itmsBody-verified">
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <section id="verified_form_details" style="display:none;">
+    <div class="container">
+      <center><a taget="_top" onclick="$('#verified_form_details').hide();$('#verified_form').show();"
+          style="color:#2bad32;float:left;"><i
+            class="btn btn-outline-dar waves-effect waves-light fas fa-arrow-left fa-fw fa-2x back2-btn"
+            style="color:#2bad32;float:left;"></i>Back</a>
+        &nbsp;<strong><span class="welcom_"></span></strong>&nbsp;
+        <a taget="_top" style="color:#2bad32;float:right;" onclick="logoutWeb();"> LOGOUT<i
+            class="btn btn-outline-dar waves-effect waves-light fas fa-arrow-right fa-fw fa-2x logout_btn"
+            style="color:#2bad32;float:right;"></i></a>
+      </center>
+
+      <center>
+        <p style="color:green;">VEHICLE NO: <span id="vehicle_num"></span></p>
+      </center>
+      <!-- <div class="card" style="width: 25rem;margin:auto;"> -->
+      <div>
+        <div style="border: 2px solid black;float:left;width:300px;height:250px;margin:5px;background-color:#e1b7e1;">
+          <center><b>PAN</b></center>
+          <form>
+            <div class="form-group">
+              PAN NUMBER
+              <input type="text" autocomplete="off" name="veri_pan_no" id="veri_pan_no" class="valid"
+                onchange="setVehicleTableData(this);" />
+            </div>
+            <div class="form-group">
+              Name on PAN
+              <input type="text" autocomplete="off" name="veri_name_on_pan" id="veri_name_on_pan">
+            </div>
+            <div class="form-group">
+              PAN Image
+              <a name="veri_pan_img" id="veri_pan_img" target="_blank">Click here</a><br>
+            </div>
+            <div class="form-group">
+              Please tick to remove information
+              <input type="checkbox" data-toggle="modal" onclick="$('#srr-Btn').attr('veri', 'PAN');" class="check_"
+                data-target="#cmt-modal-div" style="height:18px;width:18px;" name="pan_pttri" id="pan_pttri">
+            </div>
+          </form>
+        </div>
+
+        <div style="border: 2px solid black;float:left;width:240px;height:250px;margin:5px;background-color:#f0f0f0;">
+          <center><b>TDS</b></center>
+          <form>
+            <div class="form-group">
+              TDS
+              <input type="text" autocomplete="off" name="veri_tds" id="veri_tds">
+            </div>
+            <div class="form-group">
+              TDS FORM
+              <a name="veri_tds_form" id="veri_tds_form" target="_blank">Click here</a></br>
+              <!-- <input type="text" autocomplete="off" name="veri_tds_form" id="veri_tds_form" class="form-control"> -->
+            </div>
+            <div class="form-group">
+              Please tick to remove information
+              <input type="checkbox" data-toggle="modal" class="check_" onclick="$('#srr-Btn').attr('veri', 'TDS');"
+                data-target="#cmt-modal-div" style="height:18px;width:18px;" name="pan_pttri" id="pan_pttri">
+            </div>
+          </form>
+        </div>
+
+        <div style="border: 2px solid black;float:left;width:250px;height:250px;margin:5px;background-color:#f0f0f0;">
+          <center><b>RC COPY</b></center>
+          <form>
+            <div class="form-group">
+              RC Copy
+              <a name="veri_rc_copy" id="veri_rc_copy" target="_blank">Click here</a><br>
+            </div>
+            <div class="form-group">
+              Address
+              <textarea type="text" style="height:60px;width:245px;" autocomplete="off" name="veri_address"
+                id="veri_address"></textarea>
+            </div>
+            <div class="form-group">
+              Please tick to remove information
+              <input type="checkbox" data-toggle="modal" class="check_" onclick="$('#srr-Btn').attr('veri', 'RC');"
+                data-target="#cmt-modal-div" style="height:18px;width:18px;" name="pan_pttri" id="pan_pttri">
+            </div>
+          </form>
+        </div>
+
+        <div style="border: 2px solid black;float:left;width:240px;height:250px;margin:5px;background-color:#f0f0f0;">
+          <center><b>RET DEC</b></center>
+          <form>
+            <div class="form-group">
+              RET Dec
+              <a name="veri_ret_dec" id="veri_ret_dec" target="_blank">Click here</a><br>
+            </div>
+            <div class="form-group">
+              % TDS
+              <input type="text" autocomplete="off" name="verify_perc_tds" id="verify_perc_tds">
+            </div>
+            <div class="form-group">
+              Please tick to remove information
+              <input type="checkbox" data-toggle="modal" class="check_" onclick="$('#srr-Btn').attr('veri', 'RETDEC');"
+                data-target="#cmt-modal-div" style="height:18px;width:18px;" name="pan_pttri" id="pan_pttri">
+            </div>
+          </form>
+        </div>
+        <!-- </div> -->
+      </div><br>
+      <button type="button" class="btn btn-primary" onclick="submitVerifyData();" id="accept_"
+        style="margin:5px;">Accept</button>
+      <button type="button" class="btn btn-primary" onclick="addVehicleTextBox();" style="margin-left:780px;">Add
+        Vehicle No.</button>
+      <button type="button" style="display:none;" class="btn btn-secondary" id="vehicleBtn"
+        onclick="sumitOpenVehicle();" style="margin-left:850px;">Submit</button>
+
+      <div class="row">
+        <div class="col-9">
+          <table class="table" style="width:50%">
+            <thead>
+              <tr>
+                <th>Vehicle no</th>
+                <th>Branch</th>
+                <th>TDS (YES/NO)</th>
+              </tr>
+            </thead>
+            <tbody id="pan_details_vehicle">
+            </tbody>
+          </table>
+        </div>
+
+        <div class="col-3 mb-5" id="vehicle_nums_div">
+
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <section id="uploading_done_form" style="display:none;">
+    <div class="container">
+      <center><a taget="_top" onclick="$('#uploading_done_form').hide();$('#home_page').show();"
+          style="color:#2bad32;float:left;"><i
+            class="btn btn-outline-dar waves-effect waves-light fas fa-arrow-left fa-fw fa-2x back2-btn"
+            style="color:#2bad32;float:left;"></i>Back</a>
+        &nbsp;<strong><span class="welcom_"></span></strong>&nbsp;
+        <a taget="_top" style="color:#2bad32;float:right;" onclick="logoutWeb();"> LOGOUT<i
+            class="btn btn-outline-dar waves-effect waves-light fas fa-arrow-right fa-fw fa-2x logout_btn"
+            style="color:#2bad32;float:right;"></i></a>
+      </center>
+
+      <center>
+        <h3 style="color:red;">UNLOADING DONE</h3>
+      </center>
+
+      <div style="background-color: white;overflow-x: scroll;padding:30px;" class="mt-5">
+        <table id="itemsTable-UNLOADING_DONE" style="width:100%;margin-left: auto;margin-right: auto;font-size:75%"
+          class="table table-search">
+          <thead>
+            <tr>
+              <th scope="col">CLIENT NAME</th>
+              <th scope="col">LR/Vehicle Number</th>
+              <th scope="col">SOURCE & DESTINATION & Timestamp</th>
+            </tr>
+          </thead>
+          <tbody id="itmsBody-UNLOADING_DONE">
+            <!-- <tr>
+              <td></td>
+              <td>Otto</td>
+              <td>@mdo</td>
+              <td>Mark</td>
+              <td>Otto</td>
+              <td>@mdo</td>
+              <td>Mark</td>
+            </tr> -->
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <section id="uploading_done_" style="display:none;">
+    <div class="container">
+      <center><a taget="_top" onclick="$('#uploading_done_').hide();$('#uploading_done_form').show();"
+          style="color:#2bad32;float:left;"><i
+            class="btn btn-outline-dar waves-effect waves-light fas fa-arrow-left fa-fw fa-2x back2-btn"
+            style="color:#2bad32;float:left;"></i>Back</a>
+        &nbsp;<strong><span class="welcom_"></span></strong>&nbsp;
+        <a taget="_top" style="color:#2bad32;float:right;" onclick="logoutWeb();"> LOGOUT<i
+            class="btn btn-outline-dar waves-effect waves-light fas fa-arrow-right fa-fw fa-2x logout_btn"
+            style="color:#2bad32;float:right;"></i></a>
+      </center>
+
+      <center>
+        <p style="color:green;">INDENT NO: <span id="ud_indent_no___"></span></p>
+      </center>
+      <div class="card" style="width: 25rem;margin:auto;">
+        <div class="card-body">
+          <form>
+            <div class="form-group">
+              Uploading Done DATE
+              <input type="datetime-local" name="udd_date" id="udd_date" class="form-control">
+            </div>
+          </form>
+          <button type="button" class="btn btn-primary" onclick="submitUploadDone();">Submit</button><br><br>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="uploading_reporting_form" style="display:none;">
+    <div class="container">
+      <center><a taget="_top" onclick="$('#uploading_reporting_form').hide();$('#home_page').show();"
+          style="color:#2bad32;float:left;"><i
+            class="btn btn-outline-dar waves-effect waves-light fas fa-arrow-left fa-fw fa-2x back2-btn"
+            style="color:#2bad32;float:left;"></i>Back</a>
+        &nbsp;<strong><span class="welcom_"></span></strong>&nbsp;
+        <a taget="_top" style="color:#2bad32;float:right;" onclick="logoutWeb();"> LOGOUT<i
+            class="btn btn-outline-dar waves-effect waves-light fas fa-arrow-right fa-fw fa-2x logout_btn"
+            style="color:#2bad32;float:right;"></i></a>
+      </center>
+
+      <center>
+        <h3 style="color:red;">UNLOADING REPORTING</h3>
+      </center>
+
+      <div style="background-color: white;overflow-x: scroll;padding:30px;" class="mt-5">
+        <table id="itemsTable-UNLOADING_REPORTING" style="width:100%;margin-left: auto;margin-right: auto;font-size:75%"
+          class="table table-search">
+          <thead>
+            <tr>
+              <th scope="col">CLIENT NAME</th>
+              <th scope="col">LR/ Vehicle Number</th>
+              <th scope="col">SOURCE & DESTINATION</th>
+            </tr>
+          </thead>
+          <tbody id="itmsBody-UNLOADING_REPORTING">
+            <!-- <tr>
+              <td></td>
+              <td>Otto</td>
+              <td>@mdo</td>
+              <td>Mark</td>
+              <td>Otto</td>
+              <td>@mdo</td>
+              <td>Mark</td>
+            </tr> -->
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <section id="uploading_reporting_" style="display:none;">
+    <div class="container">
+      <center><a taget="_top" onclick="$('#uploading_reporting_').hide();$('#uploading_reporting_form').show();"
+          style="color:#2bad32;float:left;"><i
+            class="btn btn-outline-dar waves-effect waves-light fas fa-arrow-left fa-fw fa-2x back2-btn"
+            style="color:#2bad32;float:left;"></i>Back</a>
+        &nbsp;<strong><span class="welcom_"></span></strong>&nbsp;
+        <a taget="_top" style="color:#2bad32;float:right;" onclick="logoutWeb();"> LOGOUT<i
+            class="btn btn-outline-dar waves-effect waves-light fas fa-arrow-right fa-fw fa-2x logout_btn"
+            style="color:#2bad32;float:right;"></i></a>
+      </center>
+
+      <center>
+        <p style="color:green;">INDENT NO: <span id="ur_indent_no___"></span></p>
+      </center>
+      <div class="card" style="width: 25rem;margin:auto;">
+        <div class="card-body">
+          <form>
+            <div class="form-group">
+              Uploading Reporting Date
+              <input type="datetime-local" name="urd_date" id="urd_date" class="form-control">
+            </div>
+          </form>
+          <button type="button" class="btn btn-primary" onclick="submitUploadReport();">Submit</button><br><br>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="release_lr_form" style="display:none;">
+    <div class="container">
+      <center><a taget="_top" onclick="$('#release_lr_form').hide();$('#home_page').show();"
+          style="color:#2bad32;float:left;"><i
+            class="btn btn-outline-dar waves-effect waves-light fas fa-arrow-left fa-fw fa-2x back2-btn"
+            style="color:#2bad32;float:left;"></i>HOME PAGE</a>
+        &nbsp;<strong><span class="welcom_"></span></strong>&nbsp;
+        <a taget="_top" style="color:#2bad32;float:right;" onclick="logoutWeb();"> LOGOUT<i
+            class="btn btn-outline-dar waves-effect waves-light fas fa-arrow-right fa-fw fa-2x logout_btn"
+            style="color:#2bad32;float:right;"></i></a>
+      </center>
+      <center>
+        <h3 style="color:red;">RELEASE LR</h3>
+      </center>
+      <div style="background-color: white;overflow-x: scroll;padding:30px;" class="mt-5">
+        <table id="itemsTable-RELEASE_LR" style="width:100%;margin-left: auto;margin-right: auto;font-size:75%"
+          class="table table-search">
+          <thead>
+            <tr>
+              <th scope="col">INDENT DATE</th>
+              <th scope="col">CLIENT NAME</th>
+              <th scope="col">INDENT NO & VEHCILE NO</th>
+              <th scope="col">SOURCE & DESTINATION</th>
+            </tr>
+          </thead>
+          <tbody id="itmsBody-RELEASE_LR">
+            <!-- <tr>
+              <td></td>
+              <td>Otto</td>
+              <td>@mdo</td>
+              <td>Mark</td>
+              <td>Otto</td>
+              <td>@mdo</td>
+              <td>Mark</td>
+            </tr> -->
+          </tbody>
+        </table>
+      </div>
+
+    </div>
+
+  </section>
+
+  <section id="release_lr_" style="display:none;">
+    <div class="container">
+      <center><a taget="_top" onclick="$('#release_lr_').hide();$('#release_lr_form').show();"
+          style="color:#2bad32;float:left;"><i
+            class="btn btn-outline-dar waves-effect waves-light fas fa-arrow-left fa-fw fa-2x back2-btn"
+            style="color:#2bad32;float:left;"></i>Back</a>
+        &nbsp;<strong><span class="welcom_"></span></strong>&nbsp;
+        <a taget="_top" style="color:#2bad32;float:right;" onclick="logoutWeb();"> LOGOUT<i
+            class="btn btn-outline-dar waves-effect waves-light fas fa-arrow-right fa-fw fa-2x logout_btn"
+            style="color:#2bad32;float:right;"></i></a>
+      </center>
+
+      <center>
+        <p style="color:green;">INDENT NO: <span id="indent_no___"></span></p>
+      </center>
+      <div class="card" style="width: 25rem;margin:auto;">
+        <div class="card-body">
+          <form>
+            <div class="form-group">
+              VEHICLE NO
+              <input type="text" autocomplete="off"
+                onkeyup="$(this).val($(this).val().replace(/[^A-Z0-9]/ig, '').toString().toUpperCase());"
+                name="reale_vehicle_no" id="reale_vehicle_no" class="form-control valid" />
+            </div>
+            <div class="form-group">
+              VEHICLE TYPE
+              <select autocomplete="off" name="reale_vehicle_type" id="reale_vehicle_type" class="form-control valid">
+                <option value="">---SELECT---</option>
+              </select>
+            </div>
+            <div class="form-group">
+              SHIPMENT No
+              <input type="text" name="reale_shipment_type" id="reale_shipment_type" class="form-control">
+            </div>
+            <div class="form-group">
+              <table style="border-collapse: separate;border-spacing: 0 0.5em;">
+                <thread>
+                  <tr>
+                    INVOICE NO
+                  </tr>
+                </thread>
+                <tbody id="tbody_invoice">
+                  <tr>
+                    <td><input type="text" autocomplete="off" class="form-control release_lr_" id="rel_nl"></td>
+                  </tr>
+                </tbody>
+                <tfoot class="tfooter">
+                  <tr id="item-add-btn">
+                    <td colspan="1">
+                      <button type="button" class="btn background-white-no-border add-item-tr " title="Add Invoice">
+                        Invoice <i class="fa fa-plus-circle"></i></button>
+                    </td>
+                  </tr>
+                </tfoot>
+              </table>
+            </div>
+            <div class="form-group">
+              NO OF CASES
+              <input type="number" name="reale_no_of_cases" id="reale_no_of_cases" class="form-control">
+            </div>
+            <div class="form-group">
+              LR NO
+              <input type="number" name="reale_lr_no" id="reale_lr_no" class="form-control"
+                onchange="checkPreviousLrNo(this);">
+            </div>
+            <div class="form-group">
+              LR DATE (mm/dd/yyyy)
+              <input type="date" name="lr_date" id="lr_date" class="form-control">
+            </div>
+          </form>
+          <button type="button" class="btn btn-primary" onclick="submitReleaseLR();">Submit</button><br><br>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="vehicle_reporting_form" style="display:none;">
+    <div class="container">
+      <center><a taget="_top" onclick="$('#vehicle_reporting_form').hide();$('#home_page').show();"
+          style="color:#2bad32;float:left;"><i
+            class="btn btn-outline-dar waves-effect waves-light fas fa-arrow-left fa-fw fa-2x back2-btn"
+            style="color:#2bad32;float:left;"></i>HOME PAGE</a>
+        &nbsp;<strong><span class="welcom_"></span></strong>&nbsp;
+        <a taget="_top" style="color:#2bad32;float:right;" onclick="logoutWeb();"> LOGOUT<i
+            class="btn btn-outline-dar waves-effect waves-light fas fa-arrow-right fa-fw fa-2x logout_btn"
+            style="color:#2bad32;float:right;"></i></a>
+      </center>
+      <center>
+        <h3 style="color:red;">VEHICLE REPORTING AT LOADING POINT</h3>
+      </center>
+      <div style="background-color: white;overflow-x: scroll;padding:30px;" class="mt-5">
+        <table id="itemsTable-VEHICLE_REPORTING" style="width:100%;margin-left: auto;margin-right: auto;font-size:75%"
+          class="table table-search">
+          <thead>
+            <tr>
+              <th scope="col">Indent No/Date</th>
+              <th scope="col">Source/Dest.</th>
+              <th scope="col">Client Name/Vehicle No</th>
+            </tr>
+          </thead>
+          <tbody id="itmsBody-VEHICLE_REPORTING">
+            <!-- <tr>
+              <td></td>
+              <td>Otto</td>
+              <td>@mdo</td>
+              <td>Mark</td>
+              <td>Otto</td>
+              <td>@mdo</td>
+              <td>Mark</td>
+            </tr> -->
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <section id="vehicle_reporting_" style="display:none;">
+    <div class="container">
+      <center><a taget="_top" onclick="$('#vehicle_reporting_').hide();$('#vehicle_reporting_form').show();"
+          style="color:#2bad32;float:left;"><i
+            class="btn btn-outline-dar waves-effect waves-light fas fa-arrow-left fa-fw fa-2x back2-btn"
+            style="color:#2bad32;float:left;"></i>BACK</a>
+        &nbsp;<strong><span class="welcom_"></span></strong>&nbsp;
+        <a taget="_top" style="color:#2bad32;float:right;" onclick="logoutWeb();"> LOGOUT<i
+            class="btn btn-outline-dar waves-effect waves-light fas fa-arrow-right fa-fw fa-2x logout_btn"
+            style="color:#2bad32;float:right;"></i></a>
+      </center>
+    </div>
+    <div id="button-group" style="padding:10px;">
+      <p>Indent No: <span style="color:green;" id="indent_no__"></span></p>
+      <hr>
+      <p>VEHICLE NO: <span style="color:green;" id="vehicle_no__"></span></p>
+      <hr>
+      <form>
+        <div class="form-group">
+          IS VEHICLE NO CORRECT?
+          <select autocomplete="off" name="ivnc" id="ivnc" class="form-control valid" onchange="checkIVNC(this);">
+            <option value="">---SELECT---</option>
+            <option>YES</option>
+            <option>NO</option>
+          </select>
+        </div>
+        <div class="form-group mb-4" style="display:none;" id="div_cvn">
+          CORRECT VEHCILE NUMBER
+          <input type="text" name="CVN" id="CVN" class="form-control">
+        </div>
+      </form>
+      <button type="button" class="btn btn-primary" onclick="submitCorrectVN();">Submit</button><br><br>
+    </div>
+  </section>
+
+
+  <section id="purchase_fms_dashboard" style="display:none;">
+    <div class="container">
+      <center><a taget="_top" onclick="$('#purchase_fms_dashboard').hide();$('#home_page').show();"
+          style="color:#2bad32;float:left;"><i
+            class="btn btn-outline-dar waves-effect waves-light fas fa-arrow-left fa-fw fa-2x back2-btn"
+            style="color:#2bad32;float:left;"></i>HOME PAGE</a>
+        &nbsp;<strong><span class="welcom_"></span></strong>&nbsp;
+        <a taget="_top" style="color:#2bad32;float:right;" onclick="logoutWeb();"> LOGOUT<i
+            class="btn btn-outline-dar waves-effect waves-light fas fa-arrow-right fa-fw fa-2x logout_btn"
+            style="color:#2bad32;float:right;"></i></a>
+      </center>
+    </div>
+    <div id="button-group">
+      <button type="button" class="btn btn-success mt-3" id="new_entry"
+        onclick="$('#new_entry_form').show();$('#purchase_fms_dashboard').hide();">NEW ENTRY</button><br><br>
+      <button type="button" class="btn btn-primary mt-3 mb-3" style="display:none;" id="edit_entry"
+        onclick="$('#edit_entry_form').show();$('#purchase_fms_dashboard').hide();">EDIT ENTRY</button>
+    </div>
+  </section>
+
+  <section id="fleet_movement_dashboard" style="display:none;">
+    <div class="container">
+      <center><a taget="_top" onclick="$('#fleet_movement_dashboard').hide();$('#home_page').show();"
+          style="color:#2bad32;float:left;"><i
+            class="btn btn-outline-dar waves-effect waves-light fas fa-arrow-left fa-fw fa-2x back2-btn"
+            style="color:#2bad32;float:left;"></i>HOME PAGE</a>
+        &nbsp;<strong><span class="welcom_"></span></strong>&nbsp;
+        <a taget="_top" style="color:#2bad32;float:right;" onclick="logoutWeb();"> LOGOUT<i
+            class="btn btn-outline-dar waves-effect waves-light fas fa-arrow-right fa-fw fa-2x logout_btn"
+            style="color:#2bad32;float:right;"></i></a>
+      </center>
+    </div>
+    <div id="button-group">
+      <button type="button" class="btn btn-success mt-3" id="market_load" data-toggle="modal" data-target="#marketModal"
+        onclick="">Market Load</button><br><br>
+      <!-- onclick="$('#market_load_form').show();$('#fleet_movement_dashboard').hide();">Market Load</button><br><br> -->
+      <button type="button" class="btn btn-primary mt-3 mb-3" id="empty_movement" data-toggle="modal"
+        data-target="#empty_movement_modal" onclick="">Empty Movement</button>
+      <!-- onclick="$('#market_load_form').show();$('#fleet_movement_dashboard').hide();">Empty Movement</button> -->
+    </div>
+  </section>
+
+  <section id="new_entry_form" style="display:none;">
+    <div class="container">
+      <center><a taget="_top" onclick="$('#new_entry_form').hide();$('#purchase_fms_dashboard').show();"
+          style="color:#2bad32;float:left;"><i
+            class="btn btn-outline-dar waves-effect waves-light fas fa-arrow-left fa-fw fa-2x back2-btn"
+            style="color:#2bad32;float:left;"></i>Back</a>
+        &nbsp;<strong><span class="welcom_"></span></strong>&nbsp;
+        <a taget="_top" style="color:#2bad32;float:right;" onclick="logoutWeb();"> LOGOUT<i
+            class="btn btn-outline-dar waves-effect waves-light fas fa-arrow-right fa-fw fa-2x logout_btn"
+            style="color:#2bad32;float:right;"></i></a>
+      </center>
+      <center>
+        <h3 style="color:red;">New Entry</h3>
+      </center>
+      <div style="background-color: white;overflow-x: scroll;padding:30px;" class="mt-5">
+        <table id="itemsTable-NEW_ENTRY" class="table table-striped table-search">
+          <thead>
+            <tr>
+              <th scope="col">INDENT Date</th>
+              <th scope="col">INDENT No</th>
+              <th scope="col">CLIENT NAME</th>
+              <th scope="col">SOURCE & DESTINATION</th>
+            </tr>
+          </thead>
+          <tbody id="itmsBody-NEW_ENTRY">
+            <!-- <tr>
+              <td></td>
+              <td>Otto</td>
+              <td>@mdo</td>
+              <td>Mark</td>
+              <td>Otto</td>
+              <td>@mdo</td>
+              <td>Mark</td>
+            </tr> -->
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <section id="new_entry_omn" style="display:none;">
+    <div class="container">
+      <center><a taget="_top" onclick="setPage()" style="color:#2bad32;float:left;"><i
+            class="btn btn-outline-dar waves-effect waves-light fas fa-arrow-left fa-fw fa-2x back2-btn"
+            style="color:#2bad32;float:left;"></i>BACK</a>
+        &nbsp;<strong><span class="welcom_"></span></strong>&nbsp;
+        <a taget="_top" style="color:#2bad32;float:right;" onclick="logoutWeb();"> LOGOUT<i
+            class="btn btn-outline-dar waves-effect waves-light fas fa-arrow-right fa-fw fa-2x logout_btn"
+            style="color:#2bad32;float:right;"></i></a>
+      </center>
+    </div>
+    <div id="button-group">
+      Indent No <p style="color:green;" id="indent_no_"></p>
+      <button type="button" class="btn btn-success mt-3" id="owned-btn" data-toggle="modal"
+        data-target="#itmsModal1">OWNED</button><br><br>
+      <button type="button" class="btn btn-primary mt-3" id="market-btn" data-toggle="modal"
+        data-target="#itmsModal2">MARKET</button><br><br>
+      <button type="button" class="btn btn-secondary mt-3 mb-3" id="non-placement" data-toggle="modal"
+        data-target="#itmsModal3">NON PLACEMENT</button>
+    </div>
+  </section>
+
+  <section id="edit_entry_form" style="display:none;">
+    <div class="container">
+      <center><a taget="_top" onclick="$('#edit_entry_form').hide();$('#purchase_fms_dashboard').show();"
+          style="color:#2bad32;float:left;"><i
+            class="btn btn-outline-dar waves-effect waves-light fas fa-arrow-left fa-fw fa-2x back2-btn"
+            style="color:#2bad32;float:left;"></i>BACK</a>
+        &nbsp;<strong><span class="welcom_"></span></strong>&nbsp;
+        <a taget="_top" style="color:#2bad32;float:right;" onclick="logoutWeb();"> LOGOUT<i
+            class="btn btn-outline-dar waves-effect waves-light fas fa-arrow-right fa-fw fa-2x logout_btn"
+            style="color:#2bad32;float:right;"></i></a>
+      </center>
+      <center>
+        <h3 style="color:red;">Edit Entry</h3>
+      </center>
+      <div style="background-color: white;overflow-x: scroll;padding:30px;" class="mt-5">
+        <table id="itemsTable-edit_ENTRY" style="width:100%;margin-left: auto;margin-right: auto;font-size:75%"
+          class="table table-search">
+          <thead>
+            <tr>
+              <th style="min-width:40px;max-width:40px;">Indent No</th>
+              <th style="min-width:40px;max-width:40px;">Client Name</th>
+              <th style="min-width:40px;max-width:40px;">Source & Dest.</th>
+              <th style="min-width:40px;max-width:40px;">Option OMP & Vehicle No</th>
+            </tr>
+          </thead>
+          <tbody id="itmsBody-edit_ENTRY">
+            <!-- <tr>
+              <td></td>
+              <td>Otto</td>
+              <td>@mdo</td>
+              <td>Mark</td>
+              <td>Otto</td>
+              <td>@mdo</td>
+              <td>Mark</td>
+            </tr> -->
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <section id="indent_generator" style="display:none;">
+
+    <div class="container">
+      <center><a taget="_top" onclick="$('#indent_generator').hide();$('#home_page').show();"
+          style="color:#2bad32;float:left;"><i
+            class="btn btn-outline-dar waves-effect waves-light fas fa-arrow-left fa-fw fa-2x back2-btn"
+            style="color:#2bad32;float:left;"></i>HOME PAGE</a>
+        &nbsp;<strong><span class="welcom_"></span></strong>&nbsp;
+        <a taget="_top" style="color:#2bad32;float:right;" onclick="logoutWeb();"> LOGOUT<i
+            class="btn btn-outline-dar waves-effect waves-light fas fa-arrow-right fa-fw fa-2x logout_btn"
+            style="color:#2bad32;float:right;"></i></a>
+      </center>
+    </div><br>
+
+    <div class="container mb-4">
+
+      <div id="modal01">
+        <div class="modal fade" id="itmsModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel"
+          aria-hidden="true" style="background-color:#FFA450;">
+          <div class="modal-dialog" role="document">
+            <div class="modal-content">
+              <div class="modal-header">
+                <h5 class="modal-title" id="exampleModalLabel">ADD</h5>
+                <button type="button" class="close" data-dismiss="modal" onclick="removeDataFromModels();"
+                  aria-label="Close">
+                  <span aria-hidden="true">&times;</span>
+                </button>
+              </div>
+              <div class="modal-body">
+                <form id="itemsForm">
+                  <div class="form-group row">
+                    <label for="itmModlName" class="col-sm-5 col-form-label pl-2">&nbsp;<strong>CLIENT
+                        NAME</strong><span style="color: red;">*</span></label>
+                    <div class="col-sm-7">
+                      <select class="form-control" id="client_name" name="client_name" onchange="setSourceData()">
+                        <option>---SELECT--</option>
+                      </select>
+                    </div>
+                  </div>
+                  <div class="form-group row">
+                    <label for="pc" class="col-sm-5 col-form-label pl-2">&nbsp;<strong>SOURCE</strong><span
+                        style="color: red;">*</span></label>
+                    <div class="col-sm-7">
+                      <select class="form-control" id="source" name="source" onchange="setDestinationData()">
+                        <option>---SELECT--</option>
+                      </select>
+                    </div>
+                  </div>
+                  <div class="form-group row">
+                    <label for="design" class="col-sm-5 col-form-label pl-2">&nbsp;<strong>DESTINATION</strong><span
+                        style="color: red;">*</span></label>
+                    <div class="col-sm-7">
+                      <select class="form-control" id="destination" name="destination" onchange="setTrackTypeData()">
+                        <option>---SELECT--</option>
+                      </select>
+                    </div>
+                  </div>
+                  <div class="form-group row">
+                    <label for="description" class="col-sm-5 col-form-label pl-2">&nbsp;<strong>DATE PALC</strong><span
+                        style="color: red;">*</span></label>
+                    <div class="col-sm-7">
+                      <input type="date" class="form-control" id="date_palc" name="date_palc" placeholder="Date PALC" />
+                    </div>
+                  </div>
+                  <div class="form-group row">
+                    <label for="size" class="col-sm-5 col-form-label pl-2">&nbsp;<strong>NO TRUCK</strong><span
+                        style="color: red;">*</span></label>
+                    <div class="col-sm-7">
+                      <input type="number" class="form-control" id="no_truck" name="no_truck" placeholder="No Truck" />
+                    </div>
+                  </div>
+                  <div class="form-group row">
+                    <label for="weight" class="col-sm-5 col-form-label pl-2">&nbsp;<strong>TRACK TYPE</strong><span
+                        style="color: red;">*</span></label>
+                    <div class="col-sm-7">
+                      <select min="0" class="form-control" id="track_type" name="track_type" onchange="setExtraValue()">
+                        <option>---SELECT--</option>
+                      </select>
+                    </div>
+                  </div>
+                  <input type="hidden" class="form-control" id="TRANSIT_DAYS" name="TRANSIT_DAYS" />
+                  <input type="hidden" class="form-control" id="CONSIGNEE" name="CONSIGNEE" />
+                  <input type="hidden" class="form-control" id="CONSIGNOR" name="CONSIGNOR" />
+                </form>
+              </div>
+              <div class="modal-footer">
+                <button type="button" id="closeModl" class="btn btn-secondary" data-dismiss="modal"
+                  onclick="removeDataFromModels();">Close</button>
+                <button type="button" class="btn btn-primary" onclick="getItmDataToTableRepair()">Save</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="col-md-12 pb-3 mt-5 rounded-bottom" style="background-color: white;">
+
+        <form id="mainForm" class="mt-5">
+          <br><br>
+          <div class="form-group row">
+            <label for="salerPrsn" class="col-sm-5 col-form-label pl-2">&nbsp;<strong>DATE</strong><span
+                style="color: red;">*</span></label>
+            <div class="col-sm-7">
+              <input type="date" class="form-control indent_date" id="date_indent" name="date" disabled />
+            </div>
+          </div>
+
+          <div class="form-group row">
+            <label for="cstmr" class="col-sm-5 col-form-label pl-2">&nbsp;<strong>BRANCH</strong><span
+                style="color: red;">*</span></label>
+            <div class="col-sm-7">
+              <input type="text" class="form-control" id="branch" list="branch_list" onchange="setPartyName(this);" />
+              <datalist id="branch_list"></datalist>
+            </div>
+          </div>
+        </form>
+        <button class="btn" id="addItem" onclick="" style="background-color:#FFA450" data-toggle="modal"
+          data-target="#itmsModal">Add <i class="fa fa-plus"></i></button><br>
+
+        <div style="background-color: white;overflow-x: scroll;" class="mt-5">
+          <table id="itemsTable" class="table table-striped">
+            <thead>
+              <tr>
+                <th scope="col">CLIENT NAME</th>
+                <th scope="col">SOURCE</th>
+                <th scope="col">DESTINATION</th>
+                <th scope="col">DATE PALC</th>
+                <th scope="col">NO TRUCK</th>
+                <th scope="col">TRACK TYPE</th>
+              </tr>
+            </thead>
+            <tbody id="itmsBody">
+              <!-- <tr>
+              <td></td>
+              <td>Otto</td>
+              <td>@mdo</td>
+              <td>Mark</td>
+              <td>Otto</td>
+              <td>@mdo</td>
+              <td>Mark</td>
+            </tr> -->
+            </tbody>
+          </table>
+          <button id="submitBtn" onclick="submitData()" class="btn btn-primary form-control mt-3 mb-5">Submit</button>
+          <center>
+            <p>Developed by SCC Delhi</p>
+          </center>
+        </div>
+      </div>
+
+    </div>
+
+  </section>
+
+  <div id="loading" class="loading">
+    <div class="d-flex justify-content-center">
+      <div>
+        <div class="spinner-border" style="width: 3rem; height: 3rem;" role="status">
+          <span class="sr-only">Loading...</span>
+        </div>
+        <div>Loading...</div>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+  <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.1.3/js/bootstrap.min.js"></script>
+  <script src="https://code.jquery.com/jquery-1.12.4.js"></script>
+  <script src="https://code.jquery.com/ui/1.12.1/jquery-ui.js"></script>
+  <script src="https://unpkg.com/sweetalert/dist/sweetalert.min.js"></script>
+  <script src="//cdn.datatables.net/1.11.3/js/jquery.dataTables.min.js"></script>
+  <?!= include("js") ?>
+</body>
+
+</html>
