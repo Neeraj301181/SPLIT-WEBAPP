@@ -1,0 +1,2369 @@
+<script>
+  // Global Veriables
+  var clone = $("#loading").clone();
+  var doer_details, data_validation, itemsToSave = [], responses = [];
+  var edit = false, username = "", vehicle_no_dt = [];
+  const month = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+  var ttl_, addVehicleTextBoxCount = 0;
+  var doerNameBranch = {};
+  var marketLoadVN = {};
+  var currentUserName = "";
+
+  function addVehicleTextBox() {
+    addVehicleTextBoxCount++;
+    $("#vehicleBtn").show();
+    $("#vehicle_nums_div").append('<input type="text" class="form-control vhicle-verify" onchange="verifyVehicleData(this);" id="vehiBtn' + addVehicleTextBoxCount + '" bt="' + addVehicleTextBoxCount + '" style="margin-right:30px;">');
+  }
+
+  function sumitOpenVehicle() {
+    $('body').append(clone);
+    var vehicles = [];
+    var sel_vehicle = $("#vehicle_num").html();
+    for (var i = 1; i <= addVehicleTextBoxCount; i++) {
+      if ($("#vehiBtn" + i).val() != "") {
+        vehicles.push($("#vehiBtn" + i).val());
+      }
+    }
+
+    google.script.run.withSuccessHandler(function (temp) {
+      temp = JSON.parse(temp);
+      var status = temp.status;
+      if (status != "fail") {
+        addVehicleTextBoxCount = 0;
+        $(".vhicle-verify").remove();
+        swal("success", "Data successfully submitted");
+
+        // $('#verified_form_details').hide();
+        // $('#home_page').show();
+
+        $(clone).remove();
+      }
+      else {
+        addVehicleTextBoxCount = 0;
+        swal("fail", "Something went wrong");
+      }
+    }).setVehiclesNumbers(JSON.stringify({
+      vehicles: vehicles,
+      main_vehicle: sel_vehicle
+    }));
+  }
+
+  function verifyVehicleData(ctl) {
+
+    $(ctl).val($(ctl).val().toString().toUpperCase().replace(/[^a-zA-Z0-9]/g, ''));
+  }
+
+
+  function checkPanDetails() {
+
+    var pan_no = $("#pan_no_").val();
+    var row_ = vehicle_no_dt.filter((rw) => rw[6].toString().trim() === pan_no.toString().trim().toUpperCase());
+
+    if (row_.length > 10 && row_[0][9].toString().trim() == "NO") {
+      var value = swal({
+        title: "PAN NUMBER ENTERED IS MORE THAN 10 TIMES.",
+        text: "TDS WILL BE DEDUCTABLE",
+        icon: "info",
+        buttons: ["No", "Yes"],
+      });
+
+      value.then(value => {
+        if (value) {
+          $('body').append(clone);
+          google.script.run.withSuccessHandler(function (temp) {
+            temp = JSON.parse(temp);
+            vehicle_no_dt = temp['vehicle_no_dt'];
+            $(clone).remove();
+            var uni_vehicle = [];
+            ttl_.destroy();
+            $('#itmsBody-documents').find('tr').remove();
+            vehicle_no_dt.forEach(function (rw, ii) {
+              if (branches.includes(rw[3])) {
+
+                if (rw[0] != "" && !uni_vehicle.includes(rw[0]) && rw[2] != "") {
+                  uni_vehicle.push(rw[0]);
+                  var str = "";
+
+                  if (rw[6] == "") {
+                    str += "PAN<br>"
+
+                  }
+
+                  if (rw[9] == "") {
+                    str += "TDS<br>"
+
+                  }
+
+                  if (rw[11] == "") {
+                    str += "RC<br>"
+                  }
+
+                  if (rw[13] == "" && (rw[9] == "YES" || rw[9] == "")) {
+                    str += "RET DEC<br>"
+                  }
+
+                  n = new Date(rw[2]);
+                  y = n.getFullYear();
+                  m = month[n.getMonth()];
+                  d = n.getDate();
+                  d = d <= 9 ? "0" + d : d;
+                  var completeDate = d + "-" + m + "-" + y;
+                  if (str != "")
+                    $('#itmsBody-documents').append('<tr onclick="openDocumentsButtonPage(this);" id=' + rw[0] + '><td>' + rw[1] + '<br>' + completeDate + '</td><td>' + rw[0] + '</td><td>' + str + '</td></tr>');
+                }
+
+              }
+            });
+
+            ttl_ = $('.table-search').DataTable({
+              info: false
+            });
+
+            $('#document_pan').hide();
+            $('#document_form').show();
+            rec_dec_objects = [];
+          }).setVehicleNumberData(pan_no);
+        }
+        else {
+          tm_rec_dec_ = "";
+          tm_rec_dec = "";
+          $("#name_on_pan").val("");
+          $("#pan_img_").show();
+          $("#msg_").remove();
+          $("#document_pan").hide();
+          $("#document_form").show();
+        }
+      });
+    }
+    else {
+
+      if (row_.length > 0) {
+        row_ = row_[0];
+        $("#msg_").remove();
+        $("#name_on_pan").val(row_[8]);
+        $("#pan_img_").hide();
+        $('#pan_img_').attr("url", row_[7])
+        $("#pan_img_").after('<h3 id="msg_" style="color:green;">No need to upload file</h3>');
+        tm_rec_dec = row_[13]
+        tm_rec_dec_ = row_[14]
+      }
+      else {
+        tm_rec_dec_ = "";
+        tm_rec_dec = "";
+        $("#name_on_pan").val("");
+        $("#pan_img_").show();
+        $("#msg_").remove();
+      }
+
+      $("#data_div").show();
+    }
+  }
+
+  $(document).ready(function () {
+    n = new Date();
+    y = n.getFullYear();
+    m = n.getMonth() + 1;
+    m = m <= 9 ? "0" + m : m;
+    d = n.getDate();
+    d = d <= 9 ? "0" + d : d;
+    var completeDate = y + "-" + m + "-" + d;
+    var completeDate2 = d + "-" + m + "-" + y;
+    document.getElementById("date_indent").valueAsDate = new Date();
+    document.getElementById("market_Loading_Date").valueAsDate = new Date();
+    document.getElementById("date_indent").textContent = completeDate;
+    $(".date_indent").datepicker(completeDate);
+
+    document.getElementById("lr_date").defaultValue = completeDate;
+    document.getElementById("lr_date").textContent = completeDate;
+
+    $('#login').click(checkLoginDetails);
+    $('.logout_btn').click(logoutWeb);
+
+    var date_ = new Date();
+
+    date_.setSeconds(0);
+    date_.setMinutes(30);
+    date_.setHours(14);
+
+    $("#urd_date").val(date_.toJSON().slice(0, 19));
+
+    var date1_ = new Date();
+    date1_.setSeconds(0);
+    date1_.setMinutes(30);
+    date1_.setHours(23);
+
+    $("#udd_date").val(date1_.toJSON().slice(0, 19));
+
+    google.script.run.withSuccessHandler(setSettingsData).getDatabaseData();
+  });
+  //  
+  function checkTDSOption() {
+    var tds = $("#TDS").val();
+    if (tds == "NO") {
+      $("#tds_form1").show();
+      $("#tds_form_label").html('TDS FORM upload is mandatory.');
+    }
+    else {
+      $("#tds_form1").hide();
+      $("#tds_form_label").html('');
+    }
+  }
+  //
+  document.getElementById('pan_img_').addEventListener('change', handleFileSelect, false);
+  var pan_objects = [];
+  function handleFileSelect(evt) {
+    var files = evt.target.files;
+    [...files].forEach(function (file, i) {
+      var fr = new FileReader();
+      fr.onload = function (e) {
+        const data = e.target.result.split(",");
+        const obj = { fileName: file.name, mimeType: data[0].match(/:(\w.+);/)[1], data: data[1] };
+        pan_objects[0]=obj;
+        console.log(pan_objects)
+      }
+      fr.readAsDataURL(file);
+    });
+  }
+  //
+  document.getElementById('TDS_FORM').addEventListener('change', handleFileSelect2, false);
+  var tds_objects = [];
+  function handleFileSelect2(evt) {
+    var files = evt.target.files;
+    [...files].forEach(function (file, i) {
+      var fr = new FileReader();
+      fr.onload = function (e) {
+        const data = e.target.result.split(",");
+        const obj = { fileName: file.name, mimeType: data[0].match(/:(\w.+);/)[1], data: data[1] };
+        tds_objects.push(obj);
+      }
+      fr.readAsDataURL(file);
+    });
+  }
+
+  document.getElementById('RC_COPY').addEventListener('change', handleFileSelect3, false);
+  var rc_objects = [];
+  function handleFileSelect3(evt) {
+    var files = evt.target.files;
+    [...files].forEach(function (file, i) {
+      var fr = new FileReader();
+      fr.onload = function (e) {
+        const data = e.target.result.split(",");
+        const obj = { fileName: file.name, mimeType: data[0].match(/:(\w.+);/)[1], data: data[1] };
+        rc_objects.push(obj);
+      }
+      fr.readAsDataURL(file);
+    });
+  }
+
+  document.getElementById('rec_dec_img_').addEventListener('change', handleFileSelect4, false);
+  var rec_dec_objects = [];
+  function handleFileSelect4(evt) {
+    var files = evt.target.files;
+    [...files].forEach(function (file, i) {
+      var fr = new FileReader();
+      fr.onload = function (e) {
+        const data = e.target.result.split(",");
+        const obj = { fileName: file.name, mimeType: data[0].match(/:(\w.+);/)[1], data: data[1] };
+        rec_dec_objects.push(obj);
+      }
+      fr.readAsDataURL(file);
+    });
+  }
+  //
+  document.getElementById('upload_front_of_lr_Ack').addEventListener('change', handleFileSelect11, false);
+  var upload_front_of_lr_Ack_arr = [];
+  function handleFileSelect11(evt) {
+    var files = evt.target.files;
+    [...files].forEach(function (file, i) {
+      var fr = new FileReader();
+      fr.onload = function (e) {
+        const data = e.target.result.split(",");
+        const obj = { fileName: file.name, mimeType: data[0].match(/:(\w.+);/)[1], data: data[1] };
+        upload_front_of_lr_Ack_arr.push(obj);
+      }
+      fr.readAsDataURL(file);
+    });
+  }
+  //
+  document.getElementById('upload_back_of_lr_ack').addEventListener('change', handleFileSelect12, false);
+  var upload_back_of_lr_ack_arr = [];
+  function handleFileSelect12(evt) {
+    var files = evt.target.files;
+    [...files].forEach(function (file, i) {
+      var fr = new FileReader();
+      fr.onload = function (e) {
+        const data = e.target.result.split(",");
+        const obj = { fileName: file.name, mimeType: data[0].match(/:(\w.+);/)[1], data: data[1] };
+        upload_back_of_lr_ack_arr.push(obj);
+      }
+      fr.readAsDataURL(file);
+    });
+  }
+  //
+  document.getElementById('upload_company_ack').addEventListener('change', handleFileSelect13, false);
+  var upload_company_ack_arr = [];
+  function handleFileSelect13(evt) {
+    var files = evt.target.files;
+    [...files].forEach(function (file, i) {
+      var fr = new FileReader();
+      fr.onload = function (e) {
+        const data = e.target.result.split(",");
+        const obj = { fileName: file.name, mimeType: data[0].match(/:(\w.+);/)[1], data: data[1] };
+        upload_company_ack_arr.push(obj);
+      }
+      fr.readAsDataURL(file);
+    });
+  }
+
+  function submitRetDec() {
+    $('body').append(clone);
+    var RET_DEC_AVAI = $('#RET_DEC_AVAI').val();
+    // var rec_dec_img_ = $('#rec_dec_img_').val();
+    var tds = $('#tds').val();
+    var vehicle_no_ = $('#vehicle_no_').html();
+
+    for (var i = 0; i < vehicle_no_dt.length; i++) {
+      if (vehicle_no_dt[i][0] == vehicle_no_) {
+        break;
+      }
+    }
+
+    if ((vehicle_no_dt[i][9] == "YES" && rec_dec_objects.length > 0) || vehicle_no_dt[i][9] == "NO") {
+      google.script.run.withSuccessHandler(function (temp) {
+        temp = JSON.parse(temp);
+        vehicle_no_dt = temp['vehicle_no_dt'];
+        $(clone).remove();
+        var uni_vehicle = [];
+        ttl_.destroy();
+        $('#itmsBody-documents').find('tr').remove();
+        vehicle_no_dt.forEach(function (rw, ii) {
+          if (branches.includes(rw[3])) {
+
+            if (rw[0] != "" && !uni_vehicle.includes(rw[0]) && rw[2] != "") {
+              uni_vehicle.push(rw[0]);
+              var str = "";
+
+              if (rw[6] == "") {
+                str += "PAN<br>"
+
+              }
+
+              if (rw[9] == "") {
+                str += "TDS<br>"
+
+              }
+
+              if (rw[11] == "") {
+                str += "RC<br>"
+              }
+
+              if (rw[13] == "" && (rw[9] == "YES" || rw[9] == "")) {
+                str += "RET DEC<br>"
+              }
+
+              n = new Date(rw[2]);
+              y = n.getFullYear();
+              m = month[n.getMonth()];
+              d = n.getDate();
+              d = d <= 9 ? "0" + d : d;
+              var completeDate = d + "-" + m + "-" + y;
+              if (str != "")
+                $('#itmsBody-documents').append('<tr onclick="openDocumentsButtonPage(this);" id=' + rw[0] + '><td>' + rw[1] + '<br>' + completeDate + '</td><td>' + rw[0] + '</td><td>' + str + '</td></tr>');
+            }
+
+          }
+        });
+
+        ttl_ = $('.table-search').DataTable({
+          info: false
+        });
+
+        $('#document_ret_dec').hide();
+        $('#document_form').show();
+        rec_dec_objects = [];
+      }).setRecDecData(JSON.stringify([RET_DEC_AVAI, tds, rec_dec_objects, vehicle_no_]));
+    }
+    else {
+      $(clone).remove();
+      swal('fail', 'Please fill mandatory fields.');
+    }
+  }
+
+  function setrestDec() {
+    var RET_DEC_AVAI = $('#RET_DEC_AVAI').val();
+    if (RET_DEC_AVAI == "NO") {
+      $("#tds_").hide();
+      $("#tds").val('5%');
+    }
+    else if (RET_DEC_AVAI == "YES") {
+      $("#tds_").show();
+      $("#tds").val('1%');
+    }
+    else {
+      $("#tds_").hide();
+      $("#tds").val('');
+    }
+  }
+
+  function submitRCData() {
+    $('body').append(clone);
+    var RC_COPY = $('#RC_COPY').val();
+    var ADDRESS = $('#ADDRESS').val();
+    var vehicle_no_ = $('#vehicle_no_').html();
+
+    if (rc_objects.length > 0) {
+      google.script.run.withSuccessHandler(function (temp) {
+        temp = JSON.parse(temp);
+        vehicle_no_dt = temp['vehicle_no_dt'];
+        $(clone).remove();
+        var uni_vehicle = [];
+        ttl_.destroy();
+        $('#itmsBody-documents').find('tr').remove();
+        vehicle_no_dt.forEach(function (rw, ii) {
+          if (branches.includes(rw[3])) {
+
+            if (rw[0] != "" && !uni_vehicle.includes(rw[0]) && rw[2] != "") {
+              uni_vehicle.push(rw[0]);
+              var str = "";
+
+              if (rw[6] == "") {
+                str += "PAN<br>"
+
+              }
+
+              if (rw[9] == "") {
+                str += "TDS<br>"
+
+              }
+
+              if (rw[11] == "") {
+                str += "RC<br>"
+              }
+
+              if (rw[13] == "" && (rw[9] == "YES" || rw[9] == "")) {
+                str += "RET DEC<br>"
+              }
+
+              n = new Date(rw[2]);
+              y = n.getFullYear();
+              m = month[n.getMonth()];
+              d = n.getDate();
+              d = d <= 9 ? "0" + d : d;
+              var completeDate = d + "-" + m + "-" + y;
+              if (str != "")
+                $('#itmsBody-documents').append('<tr onclick="openDocumentsButtonPage(this);" id=' + rw[0] + '><td>' + rw[1] + '<br>' + completeDate + '</td><td>' + rw[0] + '</td><td>' + str + '</td></tr>');
+            }
+
+          }
+        });
+
+        ttl_ = $('.table-search').DataTable({
+          info: false
+        });
+
+        $('#RC_COPY').val('');
+        $('#ADDRESS').val('');
+
+        $('#document_rc').hide();
+        $('#document_form').show();
+        rc_objects = [];
+      }).setRCData(JSON.stringify([ADDRESS, rc_objects, vehicle_no_]));
+    }
+    else {
+      $(clone).remove();
+      swal('fail', 'Please fill mandatory fields.');
+    }
+  }
+
+
+  function submitTdsData() {
+    $('body').append(clone);
+    var TDS = $('#TDS').val();
+    var TDS_FORM = $('#TDS_FORM').val();
+    var vehicle_no_ = $('#vehicle_no_').html();
+
+    if ((TDS == "NO" && tds_objects.length > 0) || TDS == "YES") {
+      google.script.run.withSuccessHandler(function (temp) {
+        temp = JSON.parse(temp);
+        vehicle_no_dt = temp['vehicle_no_dt'];
+        $(clone).remove();
+        var uni_vehicle = [];
+        ttl_.destroy();
+        $('#itmsBody-documents').find('tr').remove();
+        vehicle_no_dt.forEach(function (rw, ii) {
+          if (branches.includes(rw[3])) {
+
+            if (rw[0] != "" && !uni_vehicle.includes(rw[0]) && rw[2] != "") {
+              uni_vehicle.push(rw[0]);
+              var str = "";
+
+              if (rw[6] == "") {
+                str += "PAN<br>"
+
+              }
+
+              if (rw[9] == "") {
+                str += "TDS<br>"
+
+              }
+
+              if (rw[11] == "") {
+                str += "RC<br>"
+              }
+
+              if (rw[13] == "" && (rw[9] == "YES" || rw[9] == "")) {
+                str += "RET DEC<br>"
+              }
+
+              n = new Date(rw[2]);
+              y = n.getFullYear();
+              m = month[n.getMonth()];
+              d = n.getDate();
+              d = d <= 9 ? "0" + d : d;
+              var completeDate = d + "-" + m + "-" + y;
+              if (str != "")
+                $('#itmsBody-documents').append('<tr onclick="openDocumentsButtonPage(this);" id=' + rw[0] + '><td>' + rw[1] + '<br>' + completeDate + '</td><td>' + rw[0] + '</td><td>' + str + '</td></tr>');
+            }
+
+          }
+        });
+
+        ttl_ = $('.table-search').DataTable({
+          info: false
+        });
+
+        $('#document_tds').hide();
+        $('#document_form').show();
+
+        $('#TDS').val('');
+        $('#TDS_FORM').val('');
+        tds_objects = [];
+      }).setTdsData(JSON.stringify([TDS, tds_objects, vehicle_no_]));
+    }
+    else {
+      $(clone).remove();
+      swal('fail', 'Please fill mandatory fields.');
+    }
+  }
+
+  function submitAckVerifyData() {
+    $('body').append(clone);
+    let welcom_ = $(".welcom_").html();
+    welcom_ = welcom_.replace("Welcome ", "");
+    let release_date_time = $("#release_date_time").val();
+    let arrival_date_time = $("#arrival_date_time").val();
+    let unit_shortage = $("#unit_shortage").val();
+    let case_shortage = $("#case_shortage").val();
+
+    let case_excess = $("#case_excess").val();
+    let unit_excess = $("#unit_excess").val();
+    let case_damage = $("#case_damage").val();
+    let unit_damage = $("#unit_damage").val();
+    let labour_amount = $("#labour_amount").val();
+    var rece_date = $("#rece_date").val();
+    let somoa = $("#somoa").val();
+
+    let ind = $("#submitVerifyDatabtn").attr("tk");
+
+    if (rece_date != "" && release_date_time != "" && arrival_date_time != "" && unit_shortage != "" && case_shortage != "" && somoa != "" && case_excess != "" && unit_excess != "" && case_damage != "" && unit_damage != "" && labour_amount != "" && upload_front_of_lr_Ack_arr.length > 0) {
+
+
+      google.script.run.withSuccessHandler(function (temp) {
+        temp = JSON.parse(temp);
+        responses = temp['responses'];
+        $(clone).remove();
+
+        $("#release_date_time").val('');
+        $("#arrival_date_time").val('');
+        $("#unit_shortage").val('');
+        $("#case_excess").val('');
+        $("#unit_excess").val('');
+        $("#case_damage").val('');
+        $("#case_shortage").val('');
+        $("#somoa").val('');
+        $("#unit_damage").val('');
+        $("#labour_amount").val('');
+
+        upload_front_of_lr_Ack_arr = [];
+        upload_back_of_lr_ack_arr = [];
+        upload_company_ack_arr = [];
+        $("#upload_company_ack").val("");
+        $("#upload_back_of_lr_ack").val("");
+        $("#upload_front_of_lr_Ack").val("");
+
+        ttl_.destroy();
+
+        $('#acknwledgement_verified-documents').find('tr').remove();
+        responses.forEach(function (rw, ii) {
+          if (branches.includes(rw[17])) {
+            if (rw[52] != "" && rw[42] != "") {
+              n = new Date(rw[42]);
+              y = n.getFullYear();
+              m = month[n.getMonth()];
+              d = n.getDate();
+              d = d <= 9 ? "0" + d : d;
+              var completeDate_ = d + "-" + m + "-" + y;
+
+              $('#acknwledgement_verified-documents').append('<tr onclick="openAcknowledgementVerify(this);" id=' + rw[41] + ' ind=' + rw[3] + '><td>' + rw[41] + '</td><td>' + completeDate_ + '</td><td>' + rw[4] + '</td><td>' + rw[36] + '</td><td>' + rw[5] + '</td><td>' + rw[6] + '</td></tr>');
+            }
+          }
+        });
+
+        ttl_ = $('.table-search').DataTable({
+          info: false
+        });
+
+        $('#acknwledgement_verified_form_').hide();
+        $('#acknwledgement_form').show();
+
+      }).setAcknlmntVerifyData(JSON.stringify([ind, somoa, case_shortage, unit_shortage, arrival_date_time, release_date_time, welcom_, case_excess, unit_excess, case_damage, unit_damage, labour_amount, upload_company_ack_arr, upload_back_of_lr_ack_arr, upload_front_of_lr_Ack_arr, rece_date]));
+    }
+    else {
+      $(clone).remove();
+      swal('fail', 'Please fill mandatory fields.');
+    }
+  }
+
+
+  function submitAckData() {
+    $('body').append(clone);
+    let welcom_ = $(".welcom_").html();
+    welcom_ = welcom_.replace("Welcome ", "");
+    let ind = $('#submitAckDatabtn').attr("tk");
+    //  if(upload_front_of_lr_Ack_arr.length > 0){
+
+    google.script.run.withSuccessHandler(function (temp) {
+      temp = JSON.parse(temp);
+      responses = temp['responses'];
+      $(clone).remove();
+
+      $("#upload_front_of_lr_Ack").val('');
+      $("#upload_back_of_lr_ack").val('');
+      $("#upload_company_ack").val('');
+
+      ttl_.destroy();
+
+      $('#acknwledgement-documents').find('tr').remove();
+      responses.forEach(function (rw, ii) {
+        if (branches.includes(rw[17]) && rw[51] == "" && rw[42] != "") {
+          n = new Date(rw[42]);
+          y = n.getFullYear();
+          m = month[n.getMonth()];
+          d = n.getDate();
+          d = d <= 9 ? "0" + d : d;
+          var completeDate_ = d + "-" + m + "-" + y;
+
+          $('#acknwledgement-documents').append('<tr onclick="openAcknowledgementVerify(this);" id=' + rw[41] + ' ind=' + rw[3] + '><td>' + rw[41] + '</td><td>' + completeDate_ + '</td><td>' + rw[4] + '</td><td>' + rw[36] + '</td><td>' + rw[5] + '</td><td>' + rw[6] + '</td></tr>');
+
+        }
+      });
+
+      ttl_ = $('.table-search').DataTable({
+        info: false
+      });
+
+      $('#acknwledgement_form_').hide();
+      $('#acknwledgement_form').show();
+
+      upload_back_of_lr_ack_arr = [];
+      upload_front_of_lr_Ack_arr = [];
+      upload_company_ack_arr = [];
+    }).setAcknlmntData(JSON.stringify([upload_company_ack_arr, upload_back_of_lr_ack_arr, upload_front_of_lr_Ack_arr, welcom_, ind]));
+    //  }
+    //  else{
+    //    $(clone).remove();
+    //    swal('fail', 'Please fill mandatory fields.');
+    //  }
+
+  }
+
+  function submitPanData() {
+    $('body').append(clone);
+    var name_on_pan = $('#name_on_pan').val();
+    var pan_img_ = $('#pan_img_').attr("url");
+    var pan_no_ = $('#pan_no_').val();
+    var vehicle_no_ = $('#vehicle_no_').html();
+
+    if (pan_no_ != "" && (pan_objects.length > 0 || pan_img_)) {
+      google.script.run.withSuccessHandler(function (temp) {
+        temp = JSON.parse(temp);
+        vehicle_no_dt = temp['vehicle_no_dt'];
+        $(clone).remove();
+        var uni_vehicle = [];
+
+        $("#name_on_pan").val('');
+        $("#pan_img_").val('');
+        $("#pan_no_").val('');
+        ttl_.destroy();
+        $('#itmsBody-documents').find('tr').remove();
+        vehicle_no_dt.forEach(function (rw, ii) {
+          if (branches.includes(rw[3])) {
+
+            if (rw[0] != "" && !uni_vehicle.includes(rw[0]) && rw[2] != "") {
+              uni_vehicle.push(rw[0]);
+              var str = "";
+
+              if (rw[6] == "") {
+                str += "PAN<br>"
+
+              }
+
+              if (rw[9] == "") {
+                str += "TDS<br>"
+
+              }
+
+              if (rw[11] == "") {
+                str += "RC<br>"
+              }
+
+              if (rw[13] == "" && (rw[9] == "YES" || rw[9] == "")) {
+                str += "RET DEC<br>"
+              }
+
+              n = new Date(rw[2]);
+              y = n.getFullYear();
+              m = month[n.getMonth()];
+              d = n.getDate();
+              d = d <= 9 ? "0" + d : d;
+              var completeDate = d + "-" + m + "-" + y;
+              if (str != "")
+                $('#itmsBody-documents').append('<tr onclick="openDocumentsButtonPage(this);" id=' + rw[0] + '><td>' + rw[1] + '<br>' + completeDate + '</td><td>' + rw[0] + '</td><td>' + str + '</td></tr>');
+            }
+
+          }
+        });
+
+        ttl_ = $('.table-search').DataTable({
+          info: false
+        });
+
+        $('#document_pan').hide();
+        $('#document_form').show();
+        tm_rec_dec_ = "";
+        tm_rec_dec = "";
+        pan_objects = [];
+      }).setPanData(JSON.stringify([pan_no_, name_on_pan, pan_objects, vehicle_no_, pan_img_, tm_rec_dec, tm_rec_dec_]));
+    }
+    else {
+      $(clone).remove();
+      swal('fail', 'Please fill mandatory fields.');
+    }
+
+  }
+
+  function setPartyName(ctl) {
+    var branch = $(ctl).val();
+    var filter_dt = data_validation.filter((rw) => {
+      return branch == rw[16];
+    })
+    $("#client_name").find('option').remove();
+    $("#client_name").append("<option>---SELECT---</option>");
+    var uni_client_name = [];
+    filter_dt.forEach((rw) => {
+      if (rw[5] != "") {
+        if (!uni_client_name.includes(rw[5])) {
+          $("#client_name").append("<option>" + rw[5] + "</option>");
+          uni_client_name.push(rw[5]);
+        }
+      }
+    });
+  }
+  // ----------------------new updates-----------------------------------
+
+  // Click function used to save the market load data to the sheet.
+  $(document).on('click', "#submit_market_load", function () {
+    var marketLoadFormVal = {};
+    var formValidVal = true;
+    $('.market_modal_form_fields').each(function () {
+      var currentObj = $(this);
+      var modalVal = currentObj.val();
+      if (modalVal == "" || !modalVal) {
+        formValidVal = false;
+        currentObj.addClass('modal_error_field');
+      } else {
+        currentObj.removeClass('modal_error_field');
+      }
+      marketLoadFormVal[currentObj.attr('name')] = modalVal;
+    })
+    if (formValidVal == false) {
+      return;
+    }
+    $('#marketModal').hide()
+    $('#new_loading').removeClass('hide_element');
+    var currentArrVal = [UIdGen(), marketLoadFormVal["Vehicle Number"], marketLoadFormVal["Broker Name"], marketLoadFormVal["Source"],
+    marketLoadFormVal["Destination"], marketLoadFormVal["Freight"], marketLoadFormVal["Advance"], marketLoadFormVal["Deductions"], marketLoadFormVal["Paid to Driver By Party"],
+    marketLoadFormVal["Driver Advance"], marketLoadFormVal["Loading Date"], currentUserName]
+    console.log(currentArrVal)
+    google.script.run.withSuccessHandler(function (obj) {
+      console.log(obj)
+      refreshMarketEmptyMoveModal()
+      $('#new_loading').addClass('hide_element');
+      $('.modal-backdrop.fade.show').remove();
+    }).saveMarketEmptyMovement(currentArrVal, "Market Load");
+  })
+  // Click function used to save the Emplty Movement form data to the sheet.
+  $(document).on('click', "#submit_empty_move", function () {
+    var emptyMoveFormVal = {};
+    var formValidVal = true;
+    $('.emplt_mov_modal_form_fields').each(function () {
+      var currentObj = $(this);
+      var modalVal = currentObj.val();
+      if (modalVal == "" || !modalVal) {
+        formValidVal = false;
+        currentObj.addClass('modal_error_field');
+      } else {
+        currentObj.removeClass('modal_error_field');
+      }
+      emptyMoveFormVal[currentObj.attr('name')] = modalVal;
+    })
+    if (formValidVal == false) {
+      return;
+    }
+    $('#empty_movement_modal').hide();
+    $('#new_loading').removeClass('hide_element');
+    var currentArrVal = [UIdGen(), emptyMoveFormVal["Vehicle Number"], emptyMoveFormVal["Source"], emptyMoveFormVal["Destination"],
+    emptyMoveFormVal["Driver Advance"], emptyMoveFormVal["Movement Date"], currentUserName]
+    console.log(currentArrVal)
+    google.script.run.withSuccessHandler(function (obj) {
+      console.log(obj)
+      $('#new_loading').addClass('hide_element');
+      refreshMarketEmptyMoveModal()
+      $('.modal-backdrop.fade.show').remove();
+    }).saveMarketEmptyMovement(currentArrVal, "Empty Movement");
+  })
+  // UIdGen function used to generate the unique Id.
+  function UIdGen() {
+    return Date.now().toString(36) + Math.random().toString(36).substr(2);
+  }
+  // ----------------------new updates-----------------------------------
+
+  function setDataIntoResponse() {
+    $('#itmsModal1').append(clone);
+    var branches = [];
+    data_validation.forEach(function (rw) {
+      if (rw[20] == username) {
+        branches.push(rw[21]);
+      }
+    });
+    var aa_da = $('#aa_da').val();
+    var vehicle_number = $('#vehicle_number_').val();
+    var indend_no = $('#indent_no_').html();
+    if (aa_da != "" && vehicle_number != "") {
+      google.script.run.withSuccessHandler(function (obj) {
+        obj = JSON.parse(obj);
+        responses = obj['responses'];
+        $("#new_entry_omn").hide();
+        ttl_.destroy();
+        $("#itmsBody-NEW_ENTRY").find('tr').remove();
+        $("#itmsBody-edit_ENTRY").find('tr').remove();
+        responses.forEach(function (rw) {
+          if (branches.includes(rw[17])) {
+            if (rw[19] != "") {
+              if (rw[19] == "NON-PLACEMENT" && rw[41] == "") {
+                $('#itmsBody-edit_ENTRY').append('<tr onclick="openOMNPage(this);" name = "edit" id=' + rw[3] + '><td>' + rw[3] + '</td><td>' + rw[4] + '</td><td>' + rw[5] + '<br>' + rw[6] + '</td><td>' + rw[19] + '<br>' + rw[30] + '</td></tr>');
+              }
+              else if (rw[41] == "") {
+                $('#itmsBody-edit_ENTRY').append('<tr onclick="openOMNPage(this);" name = "edit" id=' + rw[3] + '><td>' + rw[3] + '</td><td>' + rw[4] + '</td><td>' + rw[5] + '<br>' + rw[6] + '</td><td>' + rw[19] + '<br>' + rw[22] + '</td></tr>');
+              }
+            } else if (rw[7] != "") {
+              n = new Date(rw[7]);
+              y = n.getFullYear();
+              m = month[n.getMonth()];
+              d = n.getDate();
+              d = d <= 9 ? "0" + d : d;
+              var completeDate = d + "-" + m + "-" + y;
+
+              $('#itmsBody-NEW_ENTRY').append('<tr onclick="openOMNPage(this);" name = "normal" id=' + rw[3] + '><td>' + completeDate + '</td><td>' + rw[3] + '</td><td>' + rw[4] + '</td><td>' + rw[5] + '<br>' + rw[6] + '</td></tr>');
+            }
+          }
+        });
+
+        ttl_ = $('.table-search').DataTable({
+          info: false
+        });
+
+        if (edit) {
+          $("#edit_entry_form").show();
+        }
+        else {
+          $("#new_entry_form").show();
+        }
+        $('#aa_da').val('');
+        $('#vehicle_number_').val('');
+        $('#closeModl1').click();
+        refreshOwnerModal();
+        $(clone).remove();
+      }).setOwnedData(JSON.stringify([aa_da, vehicle_number, indend_no, edit]));
+    }
+    else {
+      swal("Please fill mandatory fields.");
+      $(clone).remove();
+    }
+  }
+
+
+  function setDataIntoResponse2() {
+    var branches = [];
+    data_validation.forEach(function (rw) {
+      if (rw[20] == username) {
+        branches.push(rw[21]);
+      }
+    });
+    $('#itmsModal2').append(clone);
+    var bn = $('#bn').val();
+    var rate = $('#rate').val();
+    var vehicle_no = $('#vehicle_no').val();
+    var advance_amt = $('#advance_amt').val();
+    var indend_no = $('#indent_no_').html();
+    if (bn != "" && rate != "" && advance_amt != "") {
+      google.script.run.withSuccessHandler(function (obj) {
+        obj = JSON.parse(obj);
+        responses = obj['responses'];
+        $('#bn').val('');
+        $('#rate').val('');
+        $('#vehicle_no').val('');
+        $('#advance_amt').val('');
+        $('#closeModl2').click();
+
+        refreshMarketModal();
+        $("#new_entry_omn").hide();
+        ttl_.destroy();
+        $("#itmsBody-NEW_ENTRY").find('tr').remove();
+        $("#itmsBody-edit_ENTRY").find('tr').remove();
+        //  console.log(responses)
+        responses.forEach(function (rw) {
+          if (branches.includes(rw[17])) {
+            if (rw[19] != "") {
+              if (rw[19] == "NON-PLACEMENT") {
+                $('#itmsBody-edit_ENTRY').append('<tr onclick="openOMNPage(this);" name = "edit" id=' + rw[3] + '><td>' + rw[3] + '</td><td>' + rw[4] + '</td><td>' + rw[5] + '<br><strong>Destination:</strong> ' + rw[6] + '</td><td>' + rw[19] + '<br>' + rw[30] + '</td></tr>');
+              }
+              else {
+                $('#itmsBody-edit_ENTRY').append('<tr onclick="openOMNPage(this);" name = "edit" id=' + rw[3] + '><td>' + rw[3] + '</td><td>' + rw[4] + '</td><td>' + rw[5] + '<br><strong>Destination:</strong> ' + rw[6] + '</td><td>' + rw[19] + '<br>' + rw[22] + '</td></tr>');
+              }
+            } else if (rw[7] != "") {
+              n = new Date(rw[7]);
+              y = n.getFullYear();
+              m = month[n.getMonth()];
+              d = n.getDate();
+              d = d <= 9 ? "0" + d : d;
+              var completeDate = d + "-" + m + "-" + y;
+              $('#itmsBody-NEW_ENTRY').append('<tr onclick="openOMNPage(this);" name = "normal" id=' + rw[3] + '><td>' + completeDate + '</td><td>' + rw[3] + '</td><td>' + rw[4] + '</td><td>' + rw[5] + '<br>' + rw[6] + '</td></tr>');
+            }
+          }
+        });
+
+        ttl_ = $('.table-search').DataTable({
+          info: false
+        });
+
+        if (edit) {
+          $("#edit_entry_form").show();
+        }
+        else {
+          $("#new_entry_form").show();
+        }
+        $(clone).remove();
+      }).setMarketData(JSON.stringify(["", bn, rate, vehicle_no, advance_amt, indend_no, edit]));
+    }
+    else {
+      swal("Please fill mandatory fields.");
+      $(clone).remove();
+    }
+  }
+
+  function setDataIntoResponse3() {
+    var branches = [];
+    data_validation.forEach(function (rw) {
+      if (rw[20] == username) {
+        branches.push(rw[21]);
+      }
+    });
+    $('#itmsModal3').append(clone);
+    var non_p = $('input[name=omn]:checked', '#itemsForm3').val();
+    if (typeof non_p === "string") {
+      var indend_no = $('#indent_no_').html();
+      google.script.run.withSuccessHandler(function (obj) {
+        obj = JSON.parse(obj);
+        responses = obj['responses'];
+        $('#closeModl3').click();
+
+        refreshNonPModal();
+        $("#new_entry_omn").hide();
+        ttl_.destroy();
+        $("#itmsBody-NEW_ENTRY").find('tr').remove();
+        $("#itmsBody-edit_ENTRY").find('tr').remove();
+        responses.forEach(function (rw) {
+          if (branches.includes(rw[17])) {
+            if (rw[19] != "") {
+              if (rw[19] == "NON-PLACEMENT") {
+                $('#itmsBody-edit_ENTRY').append('<tr onclick="openOMNPage(this);" name = "edit" id=' + rw[3] + '><td>' + rw[3] + '</td><td>' + rw[4] + '</td><td>' + rw[5] + '<br>' + rw[6] + '</td><td>' + rw[19] + '<br>' + rw[30] + '</td></tr>');
+              }
+              else {
+                $('#itmsBody-edit_ENTRY').append('<tr onclick="openOMNPage(this);" name = "edit" id=' + rw[3] + '><td>' + rw[3] + '</td><td>' + rw[4] + '</td><td>' + rw[5] + '<br>' + rw[6] + '</td><td>' + rw[19] + '<br>' + rw[22] + '</td></tr>');
+              }
+            } else if (rw[7] != "") {
+              n = new Date(rw[7]);
+              y = n.getFullYear();
+              m = month[n.getMonth()];
+              d = n.getDate();
+              d = d <= 9 ? "0" + d : d;
+              var completeDate = d + "-" + m + "-" + y;
+              $('#itmsBody-NEW_ENTRY').append('<tr onclick="openOMNPage(this);" name = "normal" id=' + rw[3] + '><td>' + completeDate + '</td><td>' + rw[3] + '</td><td>' + rw[4] + '</td><td>' + rw[5] + '<br>' + rw[6] + '</td></tr>');
+            }
+          }
+        });
+
+        ttl_ = $('.table-search').DataTable({
+          info: false
+        });
+
+        if (edit) {
+          $("#edit_entry_form").show();
+        }
+        else {
+          $("#new_entry_form").show();
+        }
+        $(clone).remove();
+      }).setNonPlacementData(JSON.stringify([non_p, indend_no, edit]));
+    }
+    else {
+      swal("Please fill mandatory fields.");
+      $(clone).remove();
+    }
+  }
+
+  var branches_arr = [];
+
+  function loadData(ctl) {
+    $('body').append(clone);
+    $("#pan_img_").show();
+    $("#msg_").remove();
+    branches_arr = [];
+    google.script.run.withSuccessHandler(function (obj) {
+      obj = JSON.parse(obj);
+      doer_details = obj['doer_name'];
+      data_validation = obj['data_validation'];
+      responses = obj['responses'];
+      vehicle_no_dt = obj['vehicle_no_dt'];
+      data_validation.shift();
+      doer_details.shift();
+      marketLoadVN = obj.marketLoadVN;
+      doerNameBranch = obj.doerNameBranch;
+
+      $("#branch_list").find("option").remove();
+      data_validation.forEach(function (rw) {
+        if (rw[2] != "")
+          $("#branch_list").append("<option>" + rw[2] + "</option>");
+      });
+
+      $("#company_name").html(obj['company_name']);
+
+      var name = $(".welcom_").html().replace("Welcome ", '');
+      branches = [], uni_vehicle_type = [];
+      data_validation.forEach(function (rw) {
+        if (rw[20] == name) {
+          branches.push(rw[21]);
+          branches_arr.push(rw[21]);
+        }
+      });
+
+      var uni_vehicle = [];
+
+      if (ttl_) {
+        ttl_.destroy();
+      }
+
+      $("#itmsBody-edit_ENTRY").find("tr").remove();
+      $("#itmsBody-NEW_ENTRY").find("tr").remove();
+      $("#itmsBody-VEHICLE_REPORTING").find("tr").remove();
+      $("#itmsBody-RELEASE_LR").find("tr").remove();
+      $("#itmsBody-UNLOADING_REPORTING").find("tr").remove();
+      $("#itmsBody-UNLOADING_DONE").find("tr").remove();
+      $("#itmsBody-documents").find("tr").remove();
+      $("#itmsBody-verified").find("tr").remove();
+      $("#acknwledgement-documents").find("tr").remove();
+      $("#acknwledgement_verified-documents").find("tr").remove();
+
+      responses.forEach(function (rw, ii) {
+        if (branches.includes(rw[17])) {
+          var fn_ = rw[33] != "" ? rw[33] : rw[22];
+          if (rw[19] != "") {
+
+            if (rw[19] == "NON-PLACEMENT") {
+              $('#itmsBody-edit_ENTRY').append('<tr onclick="openOMNPage(this);" name = "edit" id=' + rw[3] + '><td>' + rw[3] + '</td><td>' + rw[4] + '</td><td>' + rw[5] + '<br>' + rw[6] + '</td><td>' + rw[19] + '<br>' + rw[30] + '</td></tr>');
+            }
+            else {
+              $('#itmsBody-edit_ENTRY').append('<tr onclick="openOMNPage(this);" name = "edit" id=' + rw[3] + '><td>' + rw[3] + '</td><td>' + rw[4] + '</td><td>' + rw[5] + '<br>' + rw[6] + '</td><td>' + rw[19] + '<br>' + rw[22] + '</td></tr>');
+            }
+
+          } else if (rw[7] != "") {
+
+            n = new Date(rw[7]);
+            y = n.getFullYear();
+            m = month[n.getMonth()];
+            d = n.getDate();
+            d = d <= 9 ? "0" + d : d;
+            var completeDate = d + "-" + m + "-" + y;
+
+            $('#itmsBody-NEW_ENTRY').append('<tr onclick="openOMNPage(this);" name = "normal" id=' + rw[3] + '><td>' + completeDate + '</td><td>' + rw[3] + '</td><td>' + rw[4] + '</td><td>' + rw[5] + '<br>' + rw[6] + '</td></tr>');
+          }
+
+          if (rw[22] != "" && ii != 0 && rw[7] != "" && rw[31] == "" && rw[32] == "") {
+            n = new Date(rw[7]);
+            y = n.getFullYear();
+            m = month[n.getMonth()];
+            d = n.getDate();
+            d = d <= 9 ? "0" + d : d;
+            var completeDate = d + "-" + m + "-" + y;
+
+            $('#itmsBody-VEHICLE_REPORTING').append('<tr onclick="openVehicleReporting(this);" fn=' + rw[22] + ' id=' + rw[3] + '><td>' + rw[3] + '<br>' + completeDate + '</td><td>' + rw[5] + '<br>' + rw[6] + '</td><td>' + rw[4] + '<br>' + rw[22] + '</td></tr>');
+          }
+          if (rw[32] != "" && ii != 0 && rw[7] != "" && rw[41] == "") {
+            n = new Date(rw[7]);
+            y = n.getFullYear();
+            m = month[n.getMonth()];
+            d = n.getDate();
+            d = d <= 9 ? "0" + d : d;
+            var completeDate = d + "-" + m + "-" + y;
+            var fn_ = rw[33] != "" ? rw[33] : rw[22];
+            if (fn_ != "") {
+              $('#itmsBody-RELEASE_LR').append('<tr onclick="openReleaseLR(this);" fn=' + fn_ + ' id=' + rw[3] + ' cn=' + rw[4] + ' so=' + rw[5] + ' des=' + rw[6] + '><td>' + completeDate + '</td><td>' + rw[4] + '</td><td>' + rw[3] + '<br>' + fn_ + '</td><td>' + rw[5] + '<br>' + rw[6] + '</td></tr>');
+            }
+          }
+
+          if (ii != 0 && rw[44] == "" && rw[42] != "" && rw[41] != "" && rw[45] == "") {
+            n = new Date(rw[42]);
+            y = n.getFullYear();
+            m = month[n.getMonth()];
+            d = n.getDate();
+            d = d <= 9 ? "0" + d : d;
+            var completeDate_ = d + "-" + m + "-" + y;
+            $('#itmsBody-UNLOADING_REPORTING').append('<tr onclick="openUploadingReport(this);" id=' + rw[3] + '><td>' + rw[4] + '<br>' + completeDate_ + '</td><td>' + rw[41] + '<br>' + rw[36] + '</td><td>' + rw[5] + '<br>' + rw[6] + '</td></tr>');
+          }
+
+          if (rw[47] == "" && ii != 0 && rw[44] != "") {
+            n = new Date(rw[42]);
+            y = n.getFullYear();
+            m = month[n.getMonth()];
+            d = n.getDate();
+            d = d <= 9 ? "0" + d : d;
+            var completeDate_ = d + "-" + m + "-" + y;
+
+            n = new Date(rw[45]);
+            y = n.getFullYear();
+            m = month[n.getMonth()];
+            d = n.getDate();
+            d = d <= 9 ? "0" + d : d;
+
+            var completeDate_2 = d + "-" + m + "-" + y + " " + n.getHours() + ":" + n.getMinutes();
+
+            $('#itmsBody-UNLOADING_DONE').append('<tr onclick="openUploadingDone(this);" id=' + rw[3] + '><td>' + rw[4] + '<br>' + completeDate_ + '</td><td>' + rw[41] + '<br>' + rw[36] + '</td><td>' + rw[5] + '<br>' + rw[6] + '<br>' + completeDate_2 + '</td></tr>');
+          }
+
+          if (rw[51] == "" && rw[42] != "") {
+            n = new Date(rw[42]);
+            y = n.getFullYear();
+            m = month[n.getMonth()];
+            d = n.getDate();
+            d = d <= 9 ? "0" + d : d;
+            var completeDate_ = d + "-" + m + "-" + y;
+
+            $('#acknwledgement-documents').append('<tr onclick="openAcknowledgementVerify(this);" id=' + rw[41] + ' ind=' + rw[3] + '><td>' + rw[41] + '</td><td>' + completeDate_ + '</td><td>' + rw[4] + '</td><td>' + rw[36] + '</td><td>' + rw[5] + '</td><td>' + rw[6] + '</td></tr>');
+
+          }
+
+        }
+      });
+
+      vehicle_no_dt.forEach(function (rw, ii) {
+        if (branches.includes(rw[3])) {
+
+          if (rw[0] != "" && !uni_vehicle.includes(rw[0].toString().trim()) && rw[2] != "") {
+            uni_vehicle.push(rw[0].toString().trim());
+            var str = "";
+
+            if (rw[6] == "") {
+              str += "PAN<br>"
+
+            }
+
+            if (rw[9] == "") {
+              str += "TDS<br>"
+
+            }
+
+            if (rw[11] == "") {
+              str += "RC<br>"
+            }
+
+            if (rw[13] == "" && (rw[9] == "YES" || rw[9] == "")) {
+              str += "RET DEC<br>"
+            }
+
+            n = new Date(rw[2]);
+            y = n.getFullYear();
+            m = month[n.getMonth()];
+            d = n.getDate();
+            d = d <= 9 ? "0" + d : d;
+            var completeDate = d + "-" + m + "-" + y;
+            if (str != "")
+              $('#itmsBody-documents').append('<tr onclick="openDocumentsButtonPage(this);" id=' + rw[0] + '><td>' + rw[1] + '<br>' + completeDate + '</td><td>' + rw[0] + '</td><td>' + str + '</td></tr>');
+
+            if (rw[17] == "" && rw[6] != "" && rw[7] != "" && rw[11] != "" && ((rw[9] == "YES" && rw[13] != "") || rw[9] == "NO" && rw[10] != "")) {
+              $("#itmsBody-verified").append('<tr onclick="verifyData(this);" pn=' + rw[6] + ' id=' + rw[0] + '><td>' + rw[0] + '</td><td>' + rw[6] + '<br>' + rw[8] + '</td><td>' + rw[12] + '</td><td>' + rw[9] + '</td></tr>');
+            }
+
+          }
+
+        }
+      });
+
+      $("#loading").remove();
+      var dt = $(ctl).attr("fn");
+      $('#' + dt).show();
+      $('#home_page').hide();
+
+
+      ttl_ = $('.table-search').DataTable({
+        info: false
+      });
+
+    }).getDatabaseData();
+  }
+
+  function checkPreviousLrNo(ctl) {
+    let lr_no = $(ctl).val();
+    for (let i = 0; i < responses.length; i++) {
+      if (responses[i][41].toString().trim() == lr_no.toString().trim()) {
+        swal('ERROR - DUPLICATE LR', 'This LR number is already present.');
+        $(ctl).val('');
+        break;
+      }
+    }
+  }
+
+  function verifyData(ctl) {
+
+    let pan_ = $(ctl).attr("pn");
+
+    var dt = vehicle_no_dt.filter(function (rw) {
+      return rw[0] == $(ctl).attr("id");
+    })[0];
+
+    var pan_details_ = vehicle_no_dt.filter(function (rw) {
+      return rw[6] == pan_;
+    });
+
+    $("#pan_details_vehicle").find('tr').remove();
+    pan_details_.forEach(function (row) {
+      $("#pan_details_vehicle").append("<tr><td>" + row[0] + "</td><td>" + row[3] + "</td><td>" + row[9] + "</td></tr>");
+    });
+
+    $("#veri_pan_no").val(dt[6]);
+
+    if (dt[7].toString().indexOf('http') != -1) {
+      $("#veri_pan_img").attr("href", dt[7]);
+    }
+    else {
+      $("#veri_pan_img").attr("href", '');
+    }
+
+    $("#veri_name_on_pan").val(dt[8]);
+    $("#veri_tds").val(dt[9]).prop("disabled", true);
+
+    if (dt[10].toString().indexOf('http') != -1) {
+      $("#veri_tds_form").attr("href", dt[10])
+    }
+    else {
+      $("#veri_tds_form").attr("href", '')
+    }
+
+    if (dt[11].toString().indexOf('http') != -1) {
+      $("#veri_rc_copy").attr("href", dt[11]);
+    }
+    else {
+      $("#veri_rc_copy").attr("href", '')
+    }
+
+    $("#veri_address").val(dt[12])
+
+    if (dt[14].toString().indexOf('http') != -1) {
+      $("#veri_ret_dec").attr("href", dt[14]);
+    }
+    else {
+      $("#veri_ret_dec").attr("href", '')
+    }
+
+    $("#verify_perc_tds").val(dt[15].toString()).prop("disabled", true);
+
+    $("#vehicle_num").html($(ctl).attr("id"));
+
+    addVehicleTextBoxCount = 0;
+    $("#vehicle_nums_div").find('input').remove();
+    $("#vehicleBtn").hide();
+    $("#accept_").show();
+
+    $('#verified_form_details').show();
+    $('#verified_form').hide();
+  }
+
+  function setVehicleTableData(ctl) {
+    let pan_no = $(ctl).val();
+
+    var pan_details_ = vehicle_no_dt.filter(function (rw) {
+      return rw[6] == pan_no;
+    });
+
+    $("#pan_details_vehicle").find('tr').remove();
+    pan_details_.forEach(function (row) {
+      $("#pan_details_vehicle").append("<tr><td>" + row[0] + "</td><td>" + row[3] + "</td><td>" + row[9] + "</td></tr>");
+    });
+  }
+
+  function submitVerifyData() {
+    $('body').append(clone);
+    let veri_pan_no = $("#veri_pan_no").val();
+    let veri_pan_img = $("#veri_pan_img").attr('href');
+
+    let veri_name_on_pan = $("#veri_name_on_pan").val();
+    let veri_tds = $("#veri_tds").val();
+    let veri_tds_form = $("#veri_tds_form").attr("href");
+    let veri_rc_copy = $("#veri_rc_copy").attr('href');
+
+    let veri_address = $("#veri_address").val();
+    let veri_ret_dec = $("#veri_ret_dec").attr("href");
+    let verify_perc_tds = $("#verify_perc_tds").val();
+    let vehicle_no = $("#vehicle_num").html();
+
+    google.script.run.withSuccessHandler(function (temp) {
+      temp = JSON.parse(temp);
+      vehicle_no_dt = temp['vehicle_no_dt'];
+      $(clone).remove();
+
+      if (ttl_) {
+        ttl_.destroy();
+      }
+
+      $(".vhicle-verify").remove();
+
+      $("#veri_pan_no").val('')
+      $("#veri_pan_img").attr('href', '');
+      $("#veri_name_on_pan").val('');
+      $("#veri_tds").val('');
+      $("#veri_tds_form").attr("href", "");
+      $("#veri_rc_copy").attr('href', '');
+      $("#veri_address").val('');
+      $("#veri_ret_dec").attr('href', '');
+      $("#verify_perc_tds").val('');
+      $("#vehicle_num").html('');
+      $("#itmsBody-verified").find("tr").remove();
+
+      var branches = [];
+      var name = $(".welcom_").html().replace("Welcome ", '');
+      data_validation.forEach(function (rw) {
+        if (rw[20] == name) {
+          branches.push(rw[21]);
+        }
+      });
+
+      var uni_vehicle = [];
+      vehicle_no_dt.forEach(function (rw) {
+        if (branches.includes(rw[3]) && rw[0] != "" && !uni_vehicle.includes(rw[0].toString().trim()) && rw[2] != "") {
+          uni_vehicle.push(rw[0].toString().trim());
+          if (rw[17] == "" && rw[6] != "" && rw[7] != "" && rw[11] != "" && ((rw[9] == "YES" && rw[13] != "") || rw[9] == "NO" && rw[10] != "")) {
+
+            $("#itmsBody-verified").append('<tr onclick="verifyData(this);" pn=' + rw[6] + ' id=' + rw[0] + '><td>' + rw[0] + '</td><td>' + rw[6] + '<br>' + rw[8] + '</td><td>' + rw[12] + '</td><td>' + rw[9] + '</td></tr>');
+          }
+        }
+      });
+
+      $('#verified_form_details').hide();
+      $('#verified_form').show();
+
+      ttl_ = $('.table-search').DataTable({
+        info: false
+      });
+
+    }).submitVerifyData(JSON.stringify([vehicle_no, veri_pan_no, veri_pan_img, veri_name_on_pan, veri_tds, veri_tds_form, veri_rc_copy, veri_address, veri_ret_dec, verify_perc_tds]));
+  }
+
+  function setSettingsData(obj) {
+    obj = JSON.parse(obj);
+    doer_details = obj['doer_name'];
+    data_validation = obj['data_validation'];
+    responses = obj['responses'];
+    vehicle_no_dt = obj['vehicle_no_dt'];
+    data_validation.shift();
+    doer_details.shift();
+
+    data_validation.forEach(function (rw) {
+      if (rw[2] != "")
+        $("#branch_list").append("<option>" + rw[2] + "</option>");
+    });
+
+    $("#company_name").html(obj['company_name']);
+
+    doer_details.forEach(function (rw) {
+      if (rw[0] != "") {
+        $("#names").append("<option>" + rw[0] + "</option>");
+      }
+    });
+
+    $("#loading").remove();
+  }
+  //
+  function logoutWeb() {
+    // e.preventDefault();
+    $('body').append(clone);
+    google.script.run.withSuccessHandler(function (url) {
+      window.open(url, '_top');
+    }).getScriptUrl();
+  }
+
+  var branches = [];
+  function checkLoginDetails(e) {
+    e.preventDefault();
+    var name = $("#name").val();
+    var pass = $("#password").val(), user_dt;
+    currentUserName = name;
+    console.log(doer_details)
+    for (var i = 0; i < doer_details.length; i++) {
+      var name_ = doer_details[i][0];
+      var pass_ = doer_details[i][1];
+
+      if (name_ == name && pass == pass_) {
+        user_dt = doer_details[i];
+        break;
+      }
+    }
+
+    if (i != doer_details.length) {
+      console.log(user_dt)
+      username = name;
+      $("#home_page").show();
+      $("#login-page").hide();
+      $(".welcom_").html("Welcome " + name);
+
+      if (user_dt[2]) {
+        $("#indent_gen").show();
+      }
+
+      if (user_dt[3]) {
+        $("#purchase_fms").show();
+      }
+
+      if (user_dt[4]) {
+        $("#edit_entry").show();
+      }
+
+      if (user_dt[5]) {
+        $("#vehicle_reporting").show();
+      }
+
+      if (user_dt[6]) {
+        $("#release_lr").show();
+      }
+
+      if (user_dt[7]) {
+        $("#uploading_done").show();
+      }
+
+      if (user_dt[8]) {
+        $("#uploading_reporting").show();
+      }
+
+      if (user_dt[9]) {
+        $("#documents_").show();
+      }
+
+      if (user_dt[10]) {
+        $("#verified_").show();
+      }
+
+      if (user_dt[11]) {
+        $("#acknwledgement_").show();
+      }
+
+      if (user_dt[12]) {
+        $("#acknwledgement_verified_").show();
+      }
+      if (user_dt[13]) {
+        $("#fleet_movement").show();
+      }
+
+      $("#market_vehicle_number_list").find("option").remove();
+      $("#emplt_mov_vehicle_list").find("option").remove();
+      if (doerNameBranch[username]) {
+        doerNameBranch[username].forEach(function (branchVal) {
+          if (marketLoadVN[branchVal]) {
+            marketLoadVN[branchVal].forEach(function (rw) {
+              if (rw != "") {
+                $("#market_vehicle_number_list").append("<option>" + rw + "</option>");
+                $("#emplt_mov_vehicle_list").append("<option>" + rw + "</option>");
+              }
+            });
+          }
+        });
+      }
+
+      branches = [], uni_vehicle_type = [];
+      data_validation.forEach(function (rw) {
+        if (rw[20] == name) {
+          branches.push(rw[21]);
+        }
+      });
+      var uni_vehicle = [];
+
+    }
+    else {
+      swal("Username or password is not correct.");
+    }
+  }
+
+  function setPage() {
+    $('#new_entry_omn').hide();
+    if (!edit) {
+      $('#new_entry_form').show();
+    }
+    else {
+      $('#edit_entry_form').show();
+    }
+  }
+
+  var ttl_c = 1;
+  $(document).on("click", ".add-item-tr", function () {
+    var rel_nl = $("#rel_nl").val();
+    if (rel_nl == "") {
+      $("#rel_nl").css("border", '2px solid red');
+    }
+    else {
+      var matches = rel_nl.match(/(\d+)/);
+      var str = rel_nl.toString().replace(matches[0], '');
+      if (matches) {
+        $("#tbody_invoice").append('<tr><td><input type="text" value="' + str + (Number(matches[0]) + ttl_c).toString() + '" class="form-control release_lr_"></td></tr>');
+        ttl_c++;
+      }
+    }
+  });
+
+  function openDocumentsButtonPage(ctl) {
+
+    $("#pan_img_").show();
+    $("#msg_").remove();
+
+    var ind_no = $(ctl).attr('id');
+    for (var i = 0; i < vehicle_no_dt.length; i++) {
+      if (vehicle_no_dt[i][0] == ind_no) {
+        break;
+      }
+    }
+
+    $('.pan-btn_').remove();
+    $('.tds-btn_').remove();
+    $('.rc-btn_').remove();
+    $('.rest-dec-btn_').remove();
+
+    if (vehicle_no_dt[i][6] == "") {
+      $('.doc_cases').append('<div class="pan-btn_"><button class="btn btn-danger mt-3" fn="' + ind_no + '" onclick="panDoc(this);" id="pan-btn" >PAN</button><br><br></div>');
+    }
+
+    if (vehicle_no_dt[i][9] == "") {
+      $('.doc_cases').append('<div class="tds-btn_"><button type="button" fn="' + ind_no + '" onclick="panTDC(this);" class="btn btn-success mt-3" id="tds-btn" onclick="$("#document_cases").hide();$("#document_tds").show();">TDS</button><br><br></div>');
+
+    }
+
+    if (vehicle_no_dt[i][11] == "") {
+      $('.doc_cases').append('<div class="rc-btn_"><button type="button" fn="' + ind_no + '" onclick="panRC(this);" class="btn btn-primary mt-3" id="rc-btn">RC</button><br><br></div>');
+    }
+
+    if (vehicle_no_dt[i][13] == "" && (vehicle_no_dt[i][9] == "YES" || vehicle_no_dt[i][9] == "")) {
+      $('.doc_cases').append('<div class="rest-dec-btn_"><button onclick="retDecDoc(this);" fn="' + ind_no + '" class="btn btn-secondary mt-3" id="rest-dec-btn">RET DEC</button><br><br></div>');
+    }
+
+    $('#document_cases').show();
+    $('#document_form').hide();
+
+    $('#vehicle_no_').html(ind_no);
+  }
+
+  let tm_rec_dec_ = "", tm_rec_dec = ""
+  function panDoc(ctl) {
+
+    $("#pan_img_").show();
+    $("#msg_").remove();
+
+    var ind_no = $(ctl).attr('fn');
+    for (var i = 0; i < vehicle_no_dt.length; i++) {
+      if (vehicle_no_dt[i][0] == ind_no) {
+        break;
+      }
+    }
+
+    $('#pan_image').find('a').remove();
+
+    $('#pan_no_').val(vehicle_no_dt[i][6]);
+
+    if (vehicle_no_dt[i][7] != "") {
+      $('#pan_img_').remove();
+      $('#pan_image').append('<a href="' + vehicle_no_dt[i][7] + '">Uploaded file</a>');
+    }
+
+    if (vehicle_no_dt[i][8] != "") {
+      $('#name_on_pan').val(vehicle_no_dt[i][8]);
+    }
+    else {
+      $('#name_on_pan').val('');
+    }
+
+    $("#document_cases").hide();
+    $("#document_pan").show();
+
+    $("#name_on_pan").val('');
+    $("#pan_img_").val('');
+    $("#data_div").hide();
+  }
+
+  function retDecDoc(ctl) {
+    var ind_no = $(ctl).attr('fn');
+    for (var i = 0; i < responses.length; i++) {
+      if (responses[i][0] == ind_no) {
+        break;
+      }
+    }
+
+    $("#document_cases").hide();
+    $("#document_ret_dec").show();
+  }
+
+  function panRC(ctl) {
+    var ind_no = $(ctl).attr('fn');
+    for (var i = 0; i < responses.length; i++) {
+      if (responses[i][0] == ind_no) {
+        break;
+      }
+    }
+
+    $("#document_cases").hide();
+    $("#document_rc").show();
+  }
+
+  function panTDC(ctl) {
+    var ind_no = $(ctl).attr('fn');
+    for (var i = 0; i < responses.length; i++) {
+      if (vehicle_no_dt[i][0] == ind_no) {
+        break;
+      }
+    }
+
+    $("#document_cases").hide();
+    $("#document_tds").show();
+  }
+
+  function submitCorrectVN() {
+    $('body').append(clone);
+    var ivnc = $('#ivnc').val();
+    if (ivnc != "") {
+      var cvn = $('#CVN').val();
+      var indent = $('#indent_no__').html();
+      google.script.run.withSuccessHandler(function (temp) {
+        if (temp) {
+          temp = JSON.parse(temp);
+          responses = temp['responses'];
+          $('#ivnc').val('');
+          $('#CVN').val('');
+          ttl_.destroy();
+          $('#itmsBody-VEHICLE_REPORTING').find('tr').remove();
+          responses.forEach(function (rw, ii) {
+            if (branches.includes(rw[17]) && rw[22] != "" && ii != 0 && rw[7] != "" && rw[31] == "" && rw[32] == "") {
+              n = new Date(rw[7]);
+              y = n.getFullYear();
+              m = month[n.getMonth()];
+              d = n.getDate();
+              d = d <= 9 ? "0" + d : d;
+              var completeDate = d + "-" + m + "-" + y;
+              $('#itmsBody-VEHICLE_REPORTING').append('<tr onclick="openVehicleReporting(this);" fn=' + rw[22] + ' id=' + rw[3] + '><td>' + rw[3] + '<br>' + completeDate + '</td><td>' + rw[5] + '<br>' + rw[6] + '</td><td>' + rw[4] + '<br>' + rw[22] + '</td></tr>');
+            }
+          });
+
+          ttl_ = $('.table-search').DataTable({
+            info: false
+          });
+
+          $("#vehicle_reporting_").hide();
+          $("#vehicle_reporting_form").show();
+          $(clone).remove();
+        }
+        else {
+          swal("Something wrong.");
+          $(clone).remove();
+        }
+      }).setVehicleData(JSON.stringify([ivnc, cvn, indent]));
+    }
+    else {
+      swal("Please select vehicle option.");
+      $(clone).remove();
+    }
+  }
+
+  function submitUploadReport() {
+    $('body').append(clone);
+    var urd_date = $("#urd_date").val();
+    var ur_indent_no___ = $("#ur_indent_no___").html();
+    if (urd_date != "") {
+      google.script.run.withSuccessHandler(function (temp) {
+        if (temp) {
+          temp = JSON.parse(temp);
+          responses = temp['responses'];
+          $('#urd_date').val('');
+
+          ttl_.destroy();
+          $('#itmsBody-UNLOADING_REPORTING').find('tr').remove();
+
+
+          responses.forEach(function (rw, ii) {
+            if (branches.includes(rw[17])) {
+              if (ii != 0 && rw[44] == "" && rw[42] != "" && rw[41] != "" && rw[45] == "") {
+                n = new Date(rw[42]);
+                y = n.getFullYear();
+                m = month[n.getMonth()];
+                d = n.getDate();
+                d = d <= 9 ? "0" + d : d;
+                var completeDate_ = d + "-" + m + "-" + y;
+                $('#itmsBody-UNLOADING_REPORTING').append('<tr onclick="openUploadingReport(this);" id=' + rw[3] + '><td>' + rw[4] + '<br>' + completeDate_ + '</td><td>' + rw[41] + '<br>' + rw[36] + '</td><td>' + rw[5] + '<br>' + rw[6] + '</td></tr>');
+              }
+            }
+          });
+
+          ttl_ = $('.table-search').DataTable({
+            info: false
+          });
+
+          //  ttl_.draw();
+
+          $("#uploading_reporting_").hide();
+          $("#uploading_reporting_form").show();
+
+          $(clone).remove();
+        }
+        else {
+          swal("Something wrong.");
+          $(clone).remove();
+        }
+      }).setUploadReport(JSON.stringify([urd_date, ur_indent_no___]));
+    }
+    else {
+      swal("Please select date.");
+      $(clone).remove();
+    }
+  }
+
+  function submitUploadDone() {
+    $('body').append(clone);
+    var udd_date = $("#udd_date").val();
+    var ud_indent_no___ = $("#ud_indent_no___").html();
+    if (udd_date != "") {
+      google.script.run.withSuccessHandler(function (temp) {
+        if (temp) {
+          temp = JSON.parse(temp);
+          responses = temp['responses'];
+          $('#udd_date').val('');
+          ttl_.destroy();
+          $('#itmsBody-UNLOADING_DONE').find('tr').remove();
+
+          responses.forEach(function (rw, ii) {
+            if (branches.includes(rw[17])) {
+              if (rw[47] == "" && ii != 0 && rw[44] != "") {
+                n = new Date(rw[42]);
+                y = n.getFullYear();
+                m = month[n.getMonth()];
+                d = n.getDate();
+                d = d <= 9 ? "0" + d : d;
+                var completeDate_ = d + "-" + m + "-" + y;
+
+                n = new Date(rw[45]);
+                y = n.getFullYear();
+                m = month[n.getMonth()];
+                d = n.getDate();
+                d = d <= 9 ? "0" + d : d;
+
+                var completeDate_2 = d + "-" + m + "-" + y + " " + n.getHours() + ":" + n.getMinutes();
+
+                $('#itmsBody-UNLOADING_DONE').append('<tr onclick="openUploadingDone(this);" id=' + rw[3] + '><td>' + rw[4] + '<br>' + completeDate_ + '</td><td>' + rw[41] + '<br>' + rw[36] + '</td><td>' + rw[5] + '<br>' + rw[6] + '<br>' + completeDate_2 + '</td></tr>');
+              }
+            }
+          });
+
+          ttl_ = $('.table-search').DataTable({
+            info: false
+          });
+
+          $("#uploading_done_").hide();
+          $("#uploading_done_form").show();
+
+          $(clone).remove();
+        }
+        else {
+          swal("Something wrong.");
+          $(clone).remove();
+        }
+      }).setUploadDone(JSON.stringify([udd_date, ud_indent_no___]));
+    }
+    else {
+      swal("Please select date.");
+      $(clone).remove();
+    }
+  }
+
+  function submitReleaseLR() {
+    $('body').append(clone);
+    var reale_shipment_type = $("#reale_shipment_type").val();
+    var reale_vehicle_no = $("#reale_vehicle_no").val();
+    var reale_vehicle_type = $("#reale_vehicle_type").val();
+    var rel_nl = $("#rel_nl").val();
+    var reale_no_of_cases = $("#reale_no_of_cases").val();
+    var reale_lr_no = $("#reale_lr_no").val();
+    var lrDate = new Date()
+    var lr_date = $("#lr_date").val(lrDate.toJSON().slice(0, 19));
+
+    if (reale_shipment_type != "" && reale_vehicle_no != "" && reale_vehicle_type != "" && rel_nl != "" && reale_no_of_cases != "" && reale_lr_no != "" && lr_date != "") {
+      var release_lr_ = $(".release_lr_"), arr = [];
+      for (var i = 0; i < release_lr_.length; i++) {
+        arr.push($(release_lr_[i]).val());
+      }
+      var invoices = arr.join(", ");
+      var indent_no___ = $("#indent_no___").html();
+      google.script.run.withSuccessHandler(function (temp) {
+        if (temp) {
+          temp = JSON.parse(temp);
+          responses = temp['responses'];
+          $("#reale_shipment_type").val('');
+          $("#reale_vehicle_no").val('');
+          $("#reale_vehicle_type").val('');
+          $("#rel_nl").val('');
+          $("#reale_no_of_cases").val('');
+          $("#reale_lr_no").val('');
+          for (var i = 1; i < release_lr_.length; i++) {
+            $(release_lr_[i]).remove();
+          }
+          $("#release_lr_").hide();
+          $("#release_lr_form").show();
+          swal("success", "Data successfully submitted.");
+          $(clone).remove();
+        }
+        else {
+          swal("Something wrong.");
+          $(clone).remove();
+        }
+      }).setReleaseNl(JSON.stringify([reale_shipment_type, reale_vehicle_no, reale_vehicle_type, invoices, reale_no_of_cases, reale_lr_no, lr_date, indent_no___]));
+
+    }
+    else {
+      swal("fail", "Every fields are required");
+      $(clone).remove();
+    }
+  }
+
+  function checkIVNC(ctl) {
+    var value = $(ctl).val();
+    if (value === "NO") {
+      $('#div_cvn').show();
+    }
+    else {
+      $('#div_cvn').hide();
+    }
+  }
+
+  function openVehicleReporting(ctl) {
+    var ind_no = $(ctl).attr('id');
+    var vn = $(ctl).attr('fn');
+
+    $('#vehicle_reporting_form').hide();
+    $('#vehicle_reporting_').show();
+
+    $('#vehicle_no__').html(vn);
+    $('#indent_no__').html(ind_no);
+  }
+
+
+
+  function openReleaseLR(ctl) {
+    var ind_no = $(ctl).attr('id');
+    var vn = $(ctl).attr('fn');
+    var des = $(ctl).attr('des');
+    var so = $(ctl).attr('so');
+    var cn = $(ctl).attr('cn');
+    //  des = des.toString().split(' ').join('');
+    if (vn) {
+      vn = vn.toString().indexOf("id") !== -1 ? "" : vn;
+      vn = vn.toString().toUpperCase().replace(/[^a-zA-Z0-9]/g, '');;
+      $('#reale_vehicle_no').val(vn);
+    }
+    $('#reale_vehicle_type').find('option').remove();
+    $('#reale_vehicle_type').append('<option></option>');
+    data_validation.forEach(function (row) {
+      if (row[7].toString().trim().indexOf(' ') != -1) {
+        row[7] = row[7].toString().split(' ')[0];
+      }
+
+      if (row[5].toString().trim() == cn.toString().trim() &&
+        row[6].toString().trim() == so.toString().trim() &&
+        row[7].toString().trim() == des.toString().trim()) {
+        $('#reale_vehicle_type').append('<option>' + row[8] + '</option>');
+      }
+    });
+
+    var lrDate = new Date()
+    lrDate.setHours(lrDate.getHours() + 5)
+    lrDate.setMinutes(lrDate.getMinutes() + 30)
+    var lr_date = $("#lr_date").val(lrDate.toJSON().slice(0, 19));
+
+    $('#release_lr_form').hide();
+    $('#release_lr_').show();
+    //  console.log(ind_no)
+    $('#indent_no___').html(ind_no);
+  }
+
+  function openUploadingDone(ctl) {
+    var ind_no = $(ctl).attr('id');
+
+    $('#uploading_done_form').hide();
+    $('#uploading_done_').show();
+
+    $('#ud_indent_no___').html(ind_no);
+  }
+
+  function openAcknowledgement(ctl) {
+    var ind_no = $(ctl).attr('id');
+    var ind = $(ctl).attr('ind')
+    $('#submitAckDatabtn').attr("tk", ind);
+
+    $('#acknwledgement_form').hide();
+    $('#acknwledgement_form_').show();
+
+    $('#ak_indno').html(ind_no);
+  }
+
+  function openAcknowledgementVerify(ctl) {
+    var ind_no = $(ctl).attr('id');
+    var ind = $(ctl).attr('ind');
+
+    $("#submitVerifyDatabtn").attr("tk", ind);
+
+    var data_rw = responses.filter(function (row) {
+      return row[3].toString().trim() == ind.toString().trim();
+    })[0];
+
+    var now = new Date(data_rw[48]);
+    now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
+    document.getElementById('release_date_time').value = now.toISOString().slice(0, 16);
+
+    var now1 = new Date(data_rw[45]);
+    now1.setMinutes(now1.getMinutes() - now1.getTimezoneOffset());
+    document.getElementById('arrival_date_time').value = now1.toISOString().slice(0, 16);
+    if (data_rw[54] != "") {
+      $("#com_ack").attr('href', data_rw[54]);
+      $("#com_ack").show();
+    }
+    else {
+      $("#com_ack").attr('href', '');
+      $("#com_ack").hide();
+    }
+    if (data_rw[53] != "") {
+      $("#bolra").attr('href', data_rw[53]);
+      $("#bolra").show();
+    }
+    else {
+      $("#bolra").attr('href', '');
+      $("#bolra").hide();
+    }
+
+    if (data_rw[52] != "") {
+      $("#folra").attr('href', data_rw[52]);
+      $("#folra").show();
+    }
+    else {
+      $("#folra").attr('href', '');
+      $("#folra").hide();
+    }
+
+    $('#submitAckDatabtn').attr("tk", ind);
+
+    $('#acknwledgement_form').hide();
+    $('#acknwledgement_verified_form_').show();
+
+    $('#akv_indno').html($(ctl).find('td:first').text());
+    $('#akv_lr_date').html($(ctl).find('td:eq(1)').text());
+    $('#akv_vehicle_no_').html($(ctl).find('td:eq(2)').text());
+    $('#akv_client').html($(ctl).find('td:eq(3)').text());
+    $('#akv_source').html($(ctl).find('td:eq(4)').text());
+    $('#akv_destination').html($(ctl).find('td:eq(5)').text());
+  }
+
+  $(document).ready(function () {
+    var now = new Date();
+    var month = (now.getMonth() + 1);
+    var day = now.getDate();
+    if (month < 10)
+      month = "0" + month;
+    if (day < 10)
+      day = "0" + day;
+    var today = now.getFullYear() + '-' + month + '-' + day;
+    $('#rece_date').val(today);
+  });
+
+  function openUploadingReport(ctl) {
+    var ind_no = $(ctl).attr('id');
+
+    $('#uploading_reporting_form').hide();
+    $('#uploading_reporting_').show();
+
+    $('#ur_indent_no___').html(ind_no);
+  }
+
+  function openOMNPage(ctl) {
+    var vl = $(ctl).attr("name");
+    var ind_no = $(ctl).attr('id');
+
+    if (vl == "edit") {
+      var sel_rw = responses.filter(function (rw) {
+        return rw[3] == ind_no;
+      })[0];
+      edit = true;
+      if (sel_rw[30] == "AVAILABILITY ISSUE") {
+        $('#availability_issue').prop('checked', true);
+      }
+      else if (sel_rw[30] == "DETENTION ISSUE") {
+        $('#detention_issue').prop('checked', true);
+      }
+      else if (sel_rw[30] == "WRONG INDENT PUNCEHD") {
+        $('#wrong_indent').prop('checked', true);
+      }
+      else if (sel_rw[30] == "CANCELLED BY CLIENT") {
+        $('#cancelledbyclient').prop('checked', true);
+      }
+
+      $('#advance_amt').val(sel_rw[23]);
+      $('#vehicle_no').val(sel_rw[22]);
+      $('#rate').val(sel_rw[27]);
+      $('#bn').val(sel_rw[26]);
+
+      $('#aa_da').val(sel_rw[23]);
+      $('#vehicle_number_').val(sel_rw[22]);
+    }
+    else {
+      edit = false;
+      $('#availability_issue').prop('checked', false);
+      $('#detention_issue').prop('checked', false);
+      $('#wrong_indent').prop('checked', false);
+      $('#cancelledbyclient').prop('checked', false);
+
+      $('#advance_amt').val('');
+      $('#vehicle_no').val('');
+      $('#rate').val('');
+      $('#bn').val('');
+      $('#aa_da').val('');
+      $('#vehicle_number_').val('');
+    }
+    $('#new_entry_form').hide();
+    $('#new_entry_omn').show();
+    $('#edit_entry_form').hide();
+    $('#indent_no_').html(ind_no);
+    $('.indent_n').html(ind_no);
+  }
+
+  function setSourceData() {
+    var client_name = $("#client_name").val();
+    var branch = $("#branch").val();
+    $("#source").find("option").remove();
+    $("#source").append("<option>---SELECT---</option>");
+    var uni_source = [];
+    data_validation.forEach(function (rw) {
+      if (client_name == rw[5] && branch == rw[16] && rw[6] != "" && !uni_source.includes(rw[6])) {
+        uni_source.push(rw[6]);
+        $("#source").append("<option>" + rw[6] + "</option>");
+      }
+    });
+  }
+
+  function setDestinationData() {
+    var client_name = $("#client_name").val();
+    var source = $("#source").val();
+    var branch = $("#branch").val();
+    var uni_des = [];
+    $("#destination").find("option").remove();
+    $("#destination").append("<option>---SELECT---</option>");
+    data_validation.forEach(function (rw) {
+      if (client_name == rw[5] && source == rw[6] && rw[7] != "" && branch == rw[16] && !uni_des.includes(rw[7])) {
+        $("#destination").append("<option>" + rw[7] + "</option>");
+        uni_des.push(rw[7]);
+      }
+    });
+  }
+
+  function setTrackTypeData() {
+    var client_name = $("#client_name").val();
+    var source = $("#source").val();
+    var destination = $("#destination").val();
+    var branch = $("#branch").val();
+    var uni_track = [];
+    $("#track_type").find("option").remove();
+    $("#track_type").append("<option>---SELECT---</option>");
+    data_validation.forEach(function (rw) {
+      if (client_name == rw[5] && source == rw[6] && rw[7] == destination && rw[8] != "" && branch == rw[16] && !uni_track.includes(rw[8])) {
+        $("#track_type").append("<option>" + rw[8] + "</option>");
+        uni_track.push(rw[8]);
+      }
+    });
+  }
+
+  function setExtraValue() {
+    var client_name = $("#client_name").val();
+    var source = $("#source").val();
+    var destination = $("#destination").val();
+    var branch = $("#branch").val();
+    var track_type = $("#track_type").val();
+
+    var uni_track = [];
+    for (var i = 0; i < data_validation.length; i++) {
+      var rw = data_validation[i];
+      if (client_name == rw[5] && source == rw[6] && rw[7] == destination && rw[8] == track_type && branch == rw[16]) {
+        $("#CONSIGNEE").val(rw[15]);
+        $("#CONSIGNOR").val(rw[14]);
+        $("#TRANSIT_DAYS").val(rw[9]);
+        break;
+      }
+    }
+  }
+
+  function getItmDataToTableRepair() {
+    var formData = $("#itemsForm").serializeArray();
+
+    for (var i = 0; i < formData.length; i++) {
+      if (formData[i].value == "" || formData[i].value == "---SELECT---") {
+        swal("Error!", "Please fill all mandatory feild.!", "error");
+        return 0;
+      }
+    }
+    var rwCnt = Math.random();
+    itemsToSave.push({
+      client_name: formData[0].value,
+      source: formData[1].value,
+      destination: formData[2].value,
+      date_palc: formData[3].value,
+      no_truck: formData[4].value,
+      track_type: formData[5].value,
+      "row_": rwCnt,
+      "TRANSIT_DAYS": formData[6].value,
+      "CONSIGNOR": formData[7].value,
+      "CONSIGNEE": formData[8].value,
+    });
+
+    var html = '<tr style="background-color:#ADD8E6;" onclick="updateData(this, ' + rwCnt + ');" id="row-' + rwCnt + '">'
+      + '<td id="itm-' + rwCnt + '">' + formData[0].value + '</td>'
+      + '<td>' + formData[1].value + '</td>'
+      + '<td>' + formData[2].value + '</td>'
+      + '<td>' + formData[3].value + '</td>'
+      + '<td>' + formData[4].value + '</td>'
+      + '<td>' + formData[5].value + '</td>'
+      // +'<td><a href="javascript:deleteRw(this, '+rwCnt+')" class="fa fa-trash remove-item btn-icon btn-flat btn-rounded" title="Remove Item"></a></td>'
+      + '</tr>';
+
+    $("#itmsBody").append(html);
+
+    $("#source").find("option").remove();
+    $("#destination").find("option").remove();
+    $("#track_type").find("option").remove();
+
+    $("#closeModl").click();
+
+    $("#itemsForm")[0].reset();
+  }
+
+  function submitData() {
+    $("#submitBtn").attr('disabled', true);
+    $("body").append(clone);
+
+    var date = $("#date").val();
+    var branch = $("#branch").val();
+
+    if (date == "" || branch == "") {
+      swal("Error!", "Please fill every fields!", "error");
+      $("#submitBtn").attr('disabled', false);
+      $(clone).remove();
+      return 0;
+    }
+
+    google.script.run.withSuccessHandler(success => {
+      $("#submitBtn").attr('disabled', false);
+      $(clone).remove();
+      refreshFrom();
+      swal("Good job!", "Form saved successfully.!", "success");
+    }).saveOrder(date, branch, itemsToSave);
+  }
+
+  function updateData(ctl, rwCnt) {
+    for (var i = 0; i < itemsToSave.length; i++) {
+      if (rwCnt == itemsToSave[i].row_) {
+        $("#client_name").val(itemsToSave[i].client_name);
+        $("#source").append("<option>" + itemsToSave[i].source + "</option>");
+        $("#destination").append("<option>" + itemsToSave[i].destination + "</option>");
+        $("#date_palc").val(itemsToSave[i].date_palc);
+        $("#no_truck").val(itemsToSave[i].no_truck);
+        $("#track_type").append("<option>" + itemsToSave[i].track_type + "</option>");
+        itemsToSave[i].row_ = "";
+        $(ctl).remove();
+        $("#addItem").click();
+        break;
+      }
+    }
+  }
+
+  // function deleteRw(ctl, rwCnt) {
+  //   for(var i=0; i<itemsToSave.length; i++){
+  //     if(rwCnt == itemsToSave[i].row_){
+  //       itemsToSave[i].row_ = "";
+  //       $(ctl).remove();
+  //       break;
+  //     }
+  //   }
+  // }
+
+
+  function removeDataFromModels() {
+    $("#itemsForm")[0].reset();
+    $("#source").find("option").remove();
+    $("#destination").find("option").remove();
+    $("#track_type").find("option").remove();
+  }
+
+  function refreshFrom() {
+    $("#itmsBody").html("");
+    $("#branch").val("");
+    itemsToSave = [];
+  }
+
+  function refreshOwnerModal() {
+    $('#aa_da').val('');
+    $('#vehicle_number_').val('');
+  }
+  function refreshMarketEmptyMoveModal() {
+    $('.emplt_mov_modal_form_fields').val('');
+    $('.market_modal_form_fields').val('');
+
+    $('.emplt_mov_modal_form_fields').each(function () {
+      $(this).removeClass('modal_error_field');
+    })
+
+    $('.market_modal_form_fields').each(function () {
+      $(this).removeClass('modal_error_field');
+    })
+
+  }
+  function refreshCmtModal() {
+    $("#comment_verified").val();
+    $('.check_').prop('checked', false);
+  }
+
+  function refreshMarketModal() {
+    $('#advance_amt').val('');
+    $('#vehicle_no').val('');
+    $('#rate').val('');
+    $('#bn').val('');
+  }
+
+  function refreshNonPModal() {
+    $("input[type=radio][name=omn]").prop('checked', false);
+  }
+
+  function setVerifiedCancel(ctl) {
+    $('body').append(clone);
+    $("#closeVerify1").click();
+    var vehicle_num = $("#vehicle_num").html();
+    var comment_verified = $("#comment_verified").val();
+    var branch_ = vehicle_no_dt.filter(function (row) {
+      return row[0].toString().trim() == vehicle_num.toString().trim();
+    })[0][3];
+
+    console.log(">>>>>>>>>>>>>>>> ", branch_)
+
+    var type = $(ctl).attr('veri');
+    if (type === "PAN") {
+      var veri_pan_img = $('#veri_pan_img').attr('href');
+      var veri_name_on_pan = $('#veri_name_on_pan').val();
+      var veri_pan_no = $('#veri_pan_no').val();
+
+      google.script.run.withSuccessHandler(function (temp) {
+        successHelper(temp);
+      }).setPanValueInVahicleSh(JSON.stringify({
+        'veri_pan_img': veri_pan_img,
+        'veri_name_on_pan': veri_name_on_pan,
+        'veri_pan_no': veri_pan_no,
+        'vehicle_num': vehicle_num,
+        'comment_verified': comment_verified,
+        'branches_arr': branch_
+      }));
+    }
+    else if (type === "TDS") {
+      var veri_tds_form = $("#veri_tds_form").attr('href');
+      var veri_tds = $("#veri_tds").val();
+
+      google.script.run.withSuccessHandler(function (temp) {
+        successHelper(temp);
+      }).setTdsValueInVahicleSh(JSON.stringify({
+        'veri_tds_form': veri_tds_form,
+        'veri_tds': veri_tds,
+        'vehicle_num': vehicle_num,
+        'comment_verified': comment_verified,
+        'branches_arr': branch_
+      }));
+    }
+    else if (type === "RC") {
+      var veri_rc_copy = $("#veri_rc_copy").attr('href');
+      var veri_address = $("#veri_address").val();
+
+      google.script.run.withSuccessHandler(function (temp) {
+        successHelper(temp);
+      }).setRCValueInVahicleSh(JSON.stringify({
+        'veri_rc_copy': veri_rc_copy,
+        'veri_address': veri_address,
+        'vehicle_num': vehicle_num,
+        'comment_verified': comment_verified,
+        'branches_arr': branch_
+      }));
+    }
+    else if (type === "RETDEC") {
+      var veri_ret_dec = $("#veri_ret_dec").attr('href');
+      var verify_perc_tds = $("#verify_perc_tds").val();
+      google.script.run.withSuccessHandler(function (temp) {
+        successHelper(temp);
+      }).setRetDecValueInVahicleSh(JSON.stringify({
+        'veri_ret_dec': veri_ret_dec,
+        'verify_perc_tds': verify_perc_tds,
+        'vehicle_num': vehicle_num,
+        'comment_verified': comment_verified,
+        'branches_arr': branch_
+      }));
+    }
+    else {
+      swal('fail', 'Something went wrong');
+    }
+  }
+
+  function successHelper(ovj) {
+    ovj = JSON.parse(ovj);
+    if (ovj.status === "success") {
+      $("#comment_verified").val('');
+      $("#accept_").hide();
+      $(clone).remove();
+      swal("success", "Data successfully updated");
+    }
+    else {
+      swal("fail", "Something went wrong");
+    }
+  }
+
+  $(document).on('change', ".upper_case_field", function () {
+    $(this).val($(this).val().toUpperCase());
+  })
+</script>
